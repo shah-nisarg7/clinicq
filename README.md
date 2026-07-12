@@ -1,1 +1,1 @@
-# clinicq
+# Added skeleton of login page, connected google sheets (backend) using google cloud

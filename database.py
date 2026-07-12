@@ -73,3 +73,38 @@ def fetch_active_queue(worksheet) -> list[dict]:
     active = [p for p in all_p if p["Status"] not in ("Completed",)]
     active.sort(key=lambda p: int(p["ID"]))
     return active
+
+
+def get_next_patient_id(worksheet) -> int:
+    #to determine the auto incrementing token (ID) assigned to everypatient row
+
+    all_p = fetch_all_patients(worksheet)
+    if not all_p:
+        return 1
+    return max(int(p["ID"]) for p in all_p) + 1
+
+def add_patient(
+        worksheet,
+        name: str,
+        phone: str,
+        scheduled_time: str,
+
+)-> dict:
+    
+    new_id = get_next_patient_id(worksheet)
+
+    new_patient_row=[
+        str(new_id),
+        name,
+        phone,
+        scheduled_time,
+        "Scheduled",
+        "", #consult start time placeholder
+        "", # last msgd ETA placeholder
+    ]
+
+    worksheet.append_row(new_patient_row,value_input_option="USER_ENTERED")
+    print(f"[DB] Added patient {name} (ID ={new_id}) at slot {scheduled_time}")
+
+    new_patient = {field: new_patient_row[i] for i, field in enumerate(HEADER_ROW)}
+    return new_patient

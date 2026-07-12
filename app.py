@@ -1,5 +1,6 @@
 import streamlit as st
 import database as db
+from datetime import datetime
 
 #Title and layout of page
 st.set_page_config(
@@ -53,6 +54,10 @@ def init_state():
             st.session_state[key] = value
 
 init_state()
+
+def flash(message: str,msg_type: str="info"):
+    st.session_state.status_message = message
+    st.session_state.status_type = msg_type 
 
 with st.sidebar:
     st.markdown("## 🏥 Clinic Queue Manager")
@@ -135,7 +140,49 @@ with m5:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-if patients:
-    st.dataframe(patients)
-else:
-    st.info("No patients currently in the queue.")
+# flash msg defined after calling init_state()
+if st.session_state.status_message:
+    
+    msg = st.session_state.status_message
+    mtyp = st.session_state.status_type
+
+    if mtyp == "success": st.success(msg)
+    elif mtyp =="error": st.error(msg)
+    elif mtyp =="warning": st.warning(msg)
+    else:
+        st.sesion_state.status_message = ""
+
+
+#split view dashboard
+
+left_col,right_col = st.columns([1,1],gap = "large")
+
+with left_col:
+    with st.expander("➕ Add appointment", expanded = True):
+        with st.form("add_patient_form",clear_on_submit=True):
+            p_name = st.text_input("Patient Name *")
+            p_phone = st.text_input("Whatsapp Number *")
+            p_time = st.time_input("Scheduled Time",value = datetime.now().replace(second =0,microsecond=0).time())
+            submit_btn = st.form_submit_button("Add to Queue",use_container_width=True,type ="primary")
+
+            if submit_btn:
+                if not p_name.strip():
+                    st.error("Patient name is required.")
+                else:
+                    try:
+                        db.add_patient(st.session_state.worksheet,p_name.strip(),p_phone.strip(),p_time.strftime("%H:%M"))
+                        flash(f"✅ {p_name} added to queue.", "success")
+                        st.rerun()
+                    except Exception as e:
+                        flash(f"Failed to add patient: {e}", "error")
+                        st.rerun()
+
+    st.markdown('<div class="section-header">📋 Expected — Not Yet Arrived</div>', unsafe_allow_html=True)
+    scheduled_patients = [p for p in patients if p["Status"] == "Scheduled"]
+    
+    for p in scheduled_patients:
+        st.write(f"#{p['ID']} - {p['Patient_Name']} @ {p['Scheduled_Time']}")
+
+with right_col:
+    st.markdown('<div class="section-header">🟢 All Patients (Raw Data View)</div>', unsafe_allow_html=True)
+    st.dataframe(patients) 
