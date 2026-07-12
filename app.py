@@ -1,12 +1,12 @@
 import streamlit as st
-import datetime as datetime
 import database as db
 
+#Title and layout of page
 st.set_page_config(
-    page_title='Clinic Queue Manager',
-    page_icon=':hospital:',
-    layout='wide',
-    initial_sidebar_state='expanded',
+    page_title="Clinic Queue Manager",
+    page_icon="🏥",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 st.markdown("""
@@ -25,63 +25,75 @@ st.markdown("""
     section[data-testid="stSidebar"] h3 {
         color: #ffffff !important;
     }
+    
+    /* ── Metric cards (added for Phase 2) ── */
+    .metric-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 14px 18px;
+        text-align: center;
+    }
+    .metric-box .val { font-size: 28px; font-weight: 700; color: #0f2940; }
+    .metric-box .lbl { font-size: 12px; color: #94a3b8; margin-top: 2px; }
 </style>
 """, unsafe_allow_html=True)
-     
-def init_state():
-    defaults={
-        "clinic_id" : None,
-        "authenticated" : False,
-        "gs_client" : None,
-        "worksheet" : None,
-        "status_message": "",
-        "status_type": "info",
-    }
 
+def init_state():
+    defaults = {
+        "clinic_id":             None,
+        "authenticated":         False,
+        "gs_client":             None,
+        "worksheet":             None,
+        "status_message":        "",
+        "status_type":           "info",
+    }
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
 
-
 init_state()
 
-#sidebar for clinic login page
-
 with st.sidebar:
-    st.markdown("## :hospital: Clinic Queue Manager")
+    st.markdown("## 🏥 Clinic Queue Manager")
     st.markdown("---")
 
     if not st.session_state.authenticated:
-        st.markdown("### Log in")
-        clinic_input = st.text_input("Clinic ID",
-                                     placeholder= "e.g. CLINIC_001",
-                                     help = "Each physical clinic has a unique ID.")
-        
-        login_btn = st.button("🔓 Connect to Queue", use_container_width = True)
+        st.markdown("### Log In")
+        clinic_input = st.text_input(
+            "Clinic ID",                            #currently no actual auth is there, just typing clinic name would login (can be interpreted as a secret code)
+            placeholder="e.g. CLINIC_001",
+            help="Each physical clinic has a unique ID."
+        )
+        login_btn = st.button("🔓 Connect to Queue", use_container_width=True)
 
-if login_btn:
+        if login_btn:
             if clinic_input.strip():
                 st.session_state.clinic_id = clinic_input.strip().upper()
                 try:
                     client = db.get_gspread_client()
                     ws = db.get_or_create_clinic_worksheet(client, st.session_state.clinic_id)
                     st.session_state.gs_client = client
-                    st.session_state.worksheet = ws
+                    st.session_state.worksheet = ws                     
                     st.session_state.authenticated = True
-                    st.rerun()
+                    st.rerun()                  
                 except Exception as e:
                     st.error(f"Connection failed: {e}")
             else:
                 st.warning("Please enter a Clinic ID.")
+#if clinic name is new / secret key, itll automatically create a new sheet in the google sheet with same headers and append patients as we add them later on .
+    else:
+        st.markdown(f"### ✅ {st.session_state.clinic_id}")
+        st.caption(f"Logged in as front-desk user")
 
-else:
-     st.markdown(f"### :tick: {st.session_state.clinic_id} ")
-     st.caption(f"Logged in as front-desk user")
-
-     if st.button("🔒 Logout", use_container_width = True):
-          for key in ["clinic_id", "authenticated", "gs_client", "worksheet"]:
-               st.session_state[key] = None if key != "authenticated" else False
-               st.rerun()
+        if st.button("🚪 Log Out", use_container_width=True):
+            for key in ["clinic_id", "authenticated", "gs_client", "worksheet"]:
+                st.session_state[key] = None if key != "authenticated" else False
+            st.rerun()
+            
+        st.markdown("---")
+        if st.button("🔄 Refresh Queue", use_container_width=True):
+            st.rerun()
 
 if not st.session_state.authenticated:
     st.markdown("""
@@ -95,5 +107,35 @@ if not st.session_state.authenticated:
     """, unsafe_allow_html=True)
     st.stop()
 
-st.markdown(f" {st.session_state.clinic_id} = Connected Successfully.")
-    
+
+if st.session_state.worksheet is None:
+    st.error("Session lost connection to the worksheet. Please log out and reconnect in the sidebar.")
+    st.stop()
+#to check the count of patients in different queue categories...
+patients = db.fetch_all_patients(st.session_state.worksheet)
+active   = [p for p in patients if p["Status"] not in ("Completed",)]
+waiting  = [p for p in active if p["Status"] == "Waiting"]
+in_con   = [p for p in active if p["Status"] == "In Consult"]
+skipped  = [p for p in active if p["Status"] == "Skipped"]
+done     = [p for p in patients if p["Status"] == "Completed"]
+
+st.markdown(f"## 🏥 {st.session_state.clinic_id} — Live Queue")
+
+m1, m2, m3, m4, m5 = st.columns(5)
+with m1:
+    st.markdown(f'<div class="metric-box"><div class="val">{len(active)}</div><div class="lbl">Active in Queue</div></div>', unsafe_allow_html=True)
+with m2:
+    st.markdown(f'<div class="metric-box"><div class="val">{len(in_con)}</div><div class="lbl">In Consult</div></div>', unsafe_allow_html=True)
+with m3:
+    st.markdown(f'<div class="metric-box"><div class="val">{len(waiting)}</div><div class="lbl">Waiting in Lobby</div></div>', unsafe_allow_html=True)
+with m4:
+    st.markdown(f'<div class="metric-box"><div class="val">{len(skipped)}</div><div class="lbl">Skipped</div></div>', unsafe_allow_html=True)
+with m5:
+    st.markdown(f'<div class="metric-box"><div class="val">{len(done)}</div><div class="lbl">Completed Today</div></div>', unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+if patients:
+    st.dataframe(patients)
+else:
+    st.info("No patients currently in the queue.")
