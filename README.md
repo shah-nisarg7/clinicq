@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # clinic queue manager
 
 built for a hack club project. It's a simple, zero cost queue management system for local clinics. Local clinics usually have messy waiting rooms, so this lets the receptionist track who is expected, who is waiting, and who is currently in the room. 
@@ -22,3 +23,6 @@ if you want to fork this and run it on your own machine:
 2. install dependencies: `pip install -r requirements.txt`
 3. you need your own google cloud service account key. save it as `service_account.json` in the root folder.
 4. run `streamlit run app.py`
+
+
+
