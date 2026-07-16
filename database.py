@@ -20,36 +20,39 @@ COL_CONSULT_START   = 6
 COL_LAST_MSG_ETA    = 7   
 #headers will be same for all sheets (different clinics) theyll automatically appear once a new clinic logs in.
 HEADER_ROW = [
-    "ID", "Patient_Name", "Phone", "Scheduled_Date", "Scheduled_Time",
-    "Status", "Consult_Start_Time", "Last_Messaged_ETA"   
+    "ID", 
+    "Patient_Name", 
+    "Phone", 
+    "Scheduled_Date", 
+    "Scheduled_Time", 
+    "Status", 
+    "Consult_Start_Time", 
+    "Last_ETA", 
+    "Is_Walk_In",   
+    "Notification_Status"
 ]
-
+    
 VALID_STATUSES = {"Scheduled", "Waiting", "In Consult", "Completed", "Skipped"}
 
 
-
+ 
 def get_gspread_client():
 
     return gspread.service_account(filename=SERVICE_ACCOUNT_FILE)
 
-def get_or_create_clinic_worksheet(client, clinic_id: str):
-    #actually opens and creates the new spreadsheet (or opens if already present..)
-    spreadsheet = client.open(SPREADSHEET_NAME)
-
+def get_or_create_clinic_worksheet(client, clinic_id):
     try:
-        worksheet = spreadsheet.worksheet(clinic_id)
+        ws = client.open("Clinic_Queue_MVP").worksheet(clinic_id)      
+        return ws   
     except gspread.exceptions.WorksheetNotFound:
-        worksheet = spreadsheet.add_worksheet(
-            title=clinic_id, rows="500", cols=str(len(HEADER_ROW))
-        )
-        worksheet.append_row(HEADER_ROW, value_input_option="USER_ENTERED")
-        print(f"[DB] Created new worksheet for {clinic_id}")
-
-    return worksheet
+        ws = client.open("Clinic_Queue_MVP").add_worksheet(title=clinic_id, rows="1000", cols="20")
+        headers = ["ID", "Patient_Name", "Phone", "Scheduled_Date", "Scheduled_Time", "Status", "Consult_Start_Time", "Last_ETA", "Is_Walk_In", "Notification_Status"]
+        ws.append_row(headers)
+        return ws
 
 
 def fetch_all_patients(worksheet) -> list[dict]:
-    #reads all the new patient rows and returns them as dicts, skips the header row (not to be counted)
+    #reads all the new patient rows and returns them as dicts, skips the header row (bcs its not to be counted)
     all_rows = worksheet.get_all_values()
 
     if not all_rows or len(all_rows) < 2:
@@ -69,7 +72,7 @@ def fetch_all_patients(worksheet) -> list[dict]:
     return patients
 
 def fetch_active_queue(worksheet) -> list[dict]:
-    #returns the active queue patients only.
+    #returns the active queue patients only
     all_p = fetch_all_patients(worksheet)
     active = [p for p in all_p if p["Status"] not in ("Completed",)]
     active.sort(key=lambda p: int(p["ID"]))
@@ -85,30 +88,32 @@ def get_next_patient_id(worksheet) -> int:
     return max(int(p["ID"]) for p in all_p) + 1
 
 def add_patient(
-        worksheet,
-        name: str,
-        phone: str,
-        scheduled_date: str, 
-        scheduled_time: str,
+    worksheet,
+    name: str,
+    phone: str,
+    scheduled_date: str,
+    scheduled_time: str,
+    is_walk_in: bool = False
+) -> dict:
 
-)-> dict:
-    
     new_id = get_next_patient_id(worksheet)
-
+    
     new_patient_row=[
         str(new_id),
         name,
         phone,
-        scheduled_date, 
+        scheduled_date,
         scheduled_time,
         "Scheduled",
-        "", #consult start time placeholder
+        "", # consult start time placeholder
         "", # last msgd ETA placeholder
+        str(is_walk_in), # Walk in flag
+        "Pending"        # Notification status
     ]
-
-    worksheet.append_row(new_patient_row,value_input_option="USER_ENTERED")
+    
+    worksheet.append_row(new_patient_row, value_input_option="USER_ENTERED")
     print(f"[DB] Added patient {name} (ID ={new_id}) at slot {scheduled_time}")
-
+    
     new_patient = {field: new_patient_row[i] for i, field in enumerate(HEADER_ROW)}
     return new_patient
 
