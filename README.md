@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # clinic queue manager
 
 built for a hack club project. It's a simple, zero cost queue management system for local clinics. Local clinics usually have messy waiting rooms, so this lets the receptionist track who is expected, who is waiting, and who is currently in the room. 
