@@ -3,6 +3,7 @@ os.environ.setdefault("APPDATA", os.path.expanduser("~"))
 
 from flask import Flask, request, jsonify
 import database as db
+import traceback
 
 app = Flask(__name__)
 
@@ -15,7 +16,7 @@ def get_client():
     if _client is None:
         _client = db.get_gspread_client()
 
-        return _client
+        return _client   
     
 
 @app.route("/api/login",methods=["POST"])
@@ -35,6 +36,7 @@ def login():
 
     except Exception as e:
         print("[API] login error",e)
+        traceback.print_exc()
         return jsonify({"success":False, "error": "server error, try again "}),500
     
     if not ok:
