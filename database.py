@@ -33,11 +33,11 @@ HEADER_ROW = [
 ]
     
 VALID_STATUSES = {"Scheduled", "Waiting", "In Consult", "Completed", "Skipped"}
-
+                  
 
  
 def get_gspread_client():
-
+                     
     return gspread.service_account(filename=SERVICE_ACCOUNT_FILE)
 
 def get_or_create_clinic_worksheet(client, clinic_id):
@@ -55,7 +55,7 @@ def fetch_all_patients(worksheet) -> list[dict]:
     #reads all the new patient rows and returns them as dicts, skips the header row (bcs its not to be counted)
     all_rows = worksheet.get_all_values()
 
-    if not all_rows or len(all_rows) < 2:
+    if not all_rows or len(all_rows) < 2:           
         return []  
 
     patients = []
@@ -69,7 +69,7 @@ def fetch_all_patients(worksheet) -> list[dict]:
         if patient["ID"]:
             patients.append(patient)
 
-    return patients
+    return patients            
 
 def fetch_active_queue(worksheet) -> list[dict]:
     #returns the active queue patients only
@@ -80,7 +80,7 @@ def fetch_active_queue(worksheet) -> list[dict]:
 
 
 def get_next_patient_id(worksheet) -> int:
-    #to determine the auto incrementing token (ID) assigned to everypatient row
+    #to determine the auto incrementing token (ID) assigned to everypatient row                    
 
     all_p = fetch_all_patients(worksheet)
     if not all_p:
@@ -141,16 +141,23 @@ def update_patient_status(
     print(f"[DB] PATIENT ID = {patient['ID']} status -> {new_status}")
 
 #new login/register logic to create new spreadsheet, also added a test login with name CLINIC_001 
-def authenticate_clinic(client, clinic_id: str, password: str) -> bool:
-    spreadsheet = client.open(SPREADSHEET_NAME)
+def _get_auth_sheet(spreadsheet):
+    # shared by login + register so neither one crashes on a brand new spreadsheet
     try:
-        auth_sheet = spreadsheet.worksheet("System_Auth")
+        return spreadsheet.worksheet("System_Auth"), False
     except gspread.exceptions.WorksheetNotFound:
-        # Auto create the auth table if it doesnt exist
         auth_sheet = spreadsheet.add_worksheet("System_Auth", rows="100", cols="2")
         auth_sheet.append_row(["Clinic_ID", "Password"])
         auth_sheet.append_row(["CLINIC_001", "admin123"])
         print("[DB] Created System_Auth tab with default credentials.")
+        return auth_sheet, True
+
+
+def authenticate_clinic(client, clinic_id: str, password: str) -> bool:
+    spreadsheet = client.open(SPREADSHEET_NAME)
+    auth_sheet, just_created = _get_auth_sheet(spreadsheet)
+
+    if just_created:
         return clinic_id == "CLINIC_001" and password == "admin123"
 
     records = auth_sheet.get_all_records()
@@ -163,13 +170,11 @@ def authenticate_clinic(client, clinic_id: str, password: str) -> bool:
 
 def register_new_clinic(client, clinic_id: str, password: str):
     spreadsheet = client.open(SPREADSHEET_NAME)
-    auth_sheet = spreadsheet.worksheet("System_Auth")
-    
+    auth_sheet, _ = _get_auth_sheet(spreadsheet)
+
     # Check if clinic ID already exists
     records = auth_sheet.get_all_records()
     if any(str(row.get("Clinic_ID", "")).strip().upper() == clinic_id for row in records):
         raise ValueError("Clinic ID already exists.")
-        
-    auth_sheet.append_row([clinic_id, password])
 
-    
+    auth_sheet.append_row([clinic_id, password])
