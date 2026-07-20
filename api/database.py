@@ -153,6 +153,15 @@ def _get_auth_sheet(spreadsheet):
         return auth_sheet, True
 
 
+def find_patient_by_id(worksheet,patient_id:str):
+    #need this for the queue actions (call to room, mark done etc)
+    #since frontend only sends us the patient id not their row number in the sheet
+    all_p = fetch_all_patients(worksheet)
+    for p in all_p:
+        if str(p["ID"]) == str(patient_id):
+            return p
+    return None
+
 def authenticate_clinic(client, clinic_id: str, password: str) -> bool:
     spreadsheet = client.open(SPREADSHEET_NAME)
     auth_sheet, just_created = _get_auth_sheet(spreadsheet)
@@ -166,6 +175,8 @@ def authenticate_clinic(client, clinic_id: str, password: str) -> bool:
             if str(row.get("Password", "")).strip() == password:
                 return True
     return False
+
+
 
 
 def register_new_clinic(client, clinic_id: str, password: str):
