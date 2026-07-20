@@ -1,11 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>ClinicQ</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClinicQ</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f4f4;
+    color: #222;
+    margin: 0;
+    padding: 20px;
+  }
+
+  .box {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 16px;
+    max-width: 400px;
+    margin: 40px auto;
+  }
+  .box h2 { margin-top: 0; font-size: 18px; }
+
+  label { display: block; margin-top: 10px; font-size: 13px; color: #444; }
+  input {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    margin-top: 3px;
+    font-size: 14px;
+  }
+  button {
+    background: #2c5f9e;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 14px;
+  }
+  button:hover { background: #234b7d; }
+
+  .error-msg { color: #a33; font-size: 13px; margin-top: 8px; }
+  .toggle-link { font-size: 13px; color: #2c5f9e; cursor: pointer; margin-top: 10px; display: inline-block; }
+</style>
 </head>
 <body>
-    <h1>ClinicQ Web Application</h1>
-    <p>migrating from streamlit to vercel</p>
+
+<!-- login / register screen  not wired up to the backend rn, just building
+     the UI first so i can see it and check the layout before wiring it up-->
+<div id="auth-screen" class="box">
+  <h2 id="auth-title">Clinic Login</h2>
+
+  <div id="login-form">
+    <label>Clinic ID</label>
+    <input type="text" id="login-clinic-id" placeholder="e.g. CLINIC_001">
+    <label>Password</label>
+    <input type="password" id="login-password">
+    <button onclick="doLogin()">Log In</button>
+    <div id="login-error" class="error-msg"></div>
+    <div class="toggle-link" onclick="showRegister()">Don't have an account? Register</div>
+  </div>
+
+  <div id="register-form" style="display:none;">
+    <label>Choose a Clinic ID</label>
+    <input type="text" id="reg-clinic-id" placeholder="e.g. MY_CLINIC">
+    <label>Choose a Password</label>
+    <input type="password" id="reg-password">
+    <label>Invite Code</label>
+    <input type="text" id="reg-invite-code" placeholder="admin invite code">
+    <button onclick="doRegister()">Register</button>
+    <div id="register-error" class="error-msg"></div>
+    <div class="toggle-link" onclick="showLogin()">Already have an account? Log in</div>
+  </div>
+</div>
+
+<script>
+// just toggling between the two forms for now, ill implement the actual login/register logic 
+// in the next commit once i confirm this looks right
+function showRegister() {
+  document.getElementById("login-form").style.display = "none";
+  document.getElementById("register-form").style.display = "block";
+  document.getElementById("auth-title").innerText = "Register Clinic";
+}
+function showLogin() {
+  document.getElementById("register-form").style.display = "none";
+  document.getElementById("login-form").style.display = "block";
+  document.getElementById("auth-title").innerText = "Clinic Login";
+}
+
+function doLogin() {              
+  alert("login logic not wired up yet");
+}
+function doRegister() {
+  alert("register logic not wired up yet");
+}
+</script>
 </body>
-</html>                     
+</html>
