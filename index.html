@@ -13,6 +13,8 @@
     margin: 0;
     padding: 20px;
   }
+  h1 { margin: 0 0 4px 0; }
+  .subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
 
   .box {
     background: #fff;
@@ -44,15 +46,25 @@
     margin-top: 14px;
   }
   button:hover { background: #234b7d; }
+  button.secondary { background: #777; }
+  button.secondary:hover { background: #5c5c5c; }
 
   .error-msg { color: #a33; font-size: 13px; margin-top: 8px; }
   .toggle-link { font-size: 13px; color: #2c5f9e; cursor: pointer; margin-top: 10px; display: inline-block; }
+
+  #dashboard { display: none; }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
 </style>
 </head>
 <body>
 
-<!-- login / register screen  not wired up to the backend rn, just building
-     the UI first so i can see it and check the layout before wiring it up-->
 <div id="auth-screen" class="box">
   <h2 id="auth-title">Clinic Login</h2>
 
@@ -79,9 +91,32 @@
   </div>
 </div>
 
+<!-- empty for now  ill add the actual queue display in the next commit for now
+     just wanted to confirm login -> dashboard switch works first -->
+<div id="dashboard">
+  <div class="top-bar">
+    <div>
+      <h1>ClinicQ</h1>
+      <div class="subtitle" id="clinic-label"></div>
+    </div>
+    <div>
+      <button class="secondary" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+  <p>logged in ok. queue display goes here next.</p>
+</div>
+
 <script>
-// just toggling between the two forms for now, ill implement the actual login/register logic 
-// in the next commit once i confirm this looks right
+// storing clinic_id in localStorage so refreshing the page doesnt log you out.
+// NOT storing the password anywhere, only the clinic id.
+let clinicId = localStorage.getItem("clinicq_clinic_id");
+
+window.onload = function () {
+  if (clinicId) {
+    showDashboard();
+  }
+};
+
 function showRegister() {
   document.getElementById("login-form").style.display = "none";
   document.getElementById("register-form").style.display = "block";
@@ -93,12 +128,88 @@ function showLogin() {
   document.getElementById("auth-title").innerText = "Clinic Login";
 }
 
-function doLogin() {              
-  alert("login logic not wired up yet");
+async function doLogin() {
+  const id = document.getElementById("login-clinic-id").value.trim();
+  const pw = document.getElementById("login-password").value;
+  const errBox = document.getElementById("login-error");
+  errBox.innerText = "";
+
+  if (!id || !pw) {
+    errBox.innerText = "enter clinic id and password";
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clinic_id: id, password: pw })
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      errBox.innerText = data.error || "login failed";
+      return;
+    }
+
+    clinicId = data.clinic_id;
+    localStorage.setItem("clinicq_clinic_id", clinicId);
+    showDashboard();
+
+  } catch (err) {
+    errBox.innerText = "couldnt reach server, try again";
+    console.error(err);
+  }
 }
-function doRegister() {
-  alert("register logic not wired up yet");
+
+async function doRegister() {
+  const id = document.getElementById("reg-clinic-id").value.trim();
+  const pw = document.getElementById("reg-password").value;
+  const invite = document.getElementById("reg-invite-code").value.trim();
+  const errBox = document.getElementById("register-error");
+  errBox.innerText = "";
+
+  if (!id || !pw || !invite) {
+    errBox.innerText = "fill in all fields";
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clinic_id: id, password: pw, invite_code: invite })
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      errBox.innerText = data.error || "registration failed";
+      return;
+    }
+
+    // dont auto login after registering, just send them back to the login form.
+    showLogin();
+    document.getElementById("login-clinic-id").value = id;
+
+  } catch (err) {
+    errBox.innerText = "couldnt reach server, try again";
+    console.error(err);
+  }
+}
+
+function logout() {                
+  clinicId = null;
+  localStorage.removeItem("clinicq_clinic_id");
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("auth-screen").style.display = "block";
+}
+
+function showDashboard() {
+  document.getElementById("auth-screen").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+  document.getElementById("clinic-label").innerText = "Logged in as " + clinicId;
 }
 </script>
+
 </body>
-</html>
+</html>                                     
