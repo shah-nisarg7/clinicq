@@ -5,119 +5,126 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ClinicQ</title>
 <style>
-  * { box-sizing: border-box; }
+    * { box-sizing: border-box; }
+    
   body {
     font-family: Arial, Helvetica, sans-serif;
     background: #f4f4f4;
-    color: #222;
+     color: #222;            
     margin: 0;
-    padding: 20px;
-  }
-  h1 { margin: 0 0 4px 0; }
+       padding: 20px;              
+  }    
+  
+    h1 { margin: 0 0 4px 0; }
   .subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
 
-  .box {
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+  .box {background: #fff;                                     
+    border: 1px solid #ccc;      
+     border-radius: 4px;        
     padding: 16px;
     max-width: 400px;
-    margin: 40px auto;
-  }
-  .box h2 { margin-top: 0; font-size: 18px; }
+       margin: 40px auto;}
+  .box h2 {margin-top: 0; font-size: 18px;}
 
   label { display: block; margin-top: 10px; font-size: 13px; color: #444; }
-  input {
-    width: 100%;
-    padding: 6px;
+  input {     
+    width: 100%;                   
+     padding: 6px;      
     border: 1px solid #bbb;
-    border-radius: 3px;
-    margin-top: 3px;
-    font-size: 14px;
-  }
+    border-radius: 3px;        
+      margin-top: 3px;
+    font-size: 14px;}             
   button {
     background: #2c5f9e;
     color: #fff;
-    border: none;
+     border: none;     
     padding: 8px 14px;
-    border-radius: 3px;
-    cursor: pointer;
+      border-radius: 3px;    
+    cursor: pointer;   
     font-size: 14px;
-    margin-top: 14px;
+     margin-top: 14px;
   }
-  button:hover { background: #234b7d; }
+  button:hover {background: #234b7d;}
+  
+  /* secondary btn styles */
   button.secondary { background: #777; }
-  button.secondary:hover { background: #5c5c5c; }
+  button.secondary:hover {background: #5c5c5c;}
+  
+  button.danger {background: #a33; }
+  button.danger:hover {background: #822;}
 
-  .error-msg { color: #a33; font-size: 13px; margin-top: 8px; }
-  .toggle-link { font-size: 13px; color: #2c5f9e; cursor: pointer; margin-top: 10px; display: inline-block; }
+  .error-msg {color: #a33; font-size: 13px; margin-top: 8px;}
+  .toggle-link { font-size: 13px; color: #2c5f9e; cursor: pointer; margin-top: 10px; display: inline-block;}
 
-  #dashboard { display: none; }
+  #dashboard {display: none;}
+  
   .top-bar {
     display: flex;
-    justify-content: space-between;
+     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #ccc;
-    padding-bottom: 10px;
+       padding-bottom: 10px;
     margin-bottom: 20px;
-  }
+  }   
 
-  .add-patient-form {
+  .add-patient-form {    
     background: #fff;
     border: 1px solid #ccc;
     padding: 14px;
-    margin-bottom: 20px;
-  }
-  .add-patient-form .row { display: flex; gap: 10px; flex-wrap: wrap; }
-  .add-patient-form .row > div { flex: 1; min-width: 140px; }
-
+     margin-bottom: 20px;}
+  .add-patient-form .row { display: flex; gap: 10px; flex-wrap: wrap;}
+  .add-patient-form .row > div {flex: 1; min-width: 140px;}
+         
   .columns {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
+    display: flex;  
+     gap: 16px;
+    flex-wrap: wrap;  }    
   .column {
     flex: 1;
     min-width: 260px;
-    background: #fff;
+      background: #fff;
     border: 1px solid #ccc;
   }
   .column-header {
     background: #eee;
     padding: 8px 10px;
     font-weight: bold;
-    font-size: 13px;
-    border-bottom: 1px solid #ccc;
-  }
+     font-size: 13px;
+    border-bottom: 1px solid #ccc;}
+         
   .patient-card {
     border-bottom: 1px solid #eee;
     padding: 10px;
-    font-size: 14px;
-  }
+     font-size: 14px; }
   .patient-card:last-child { border-bottom: none; }
-  .patient-name { font-weight: bold; }
-  .patient-meta { color: #666; font-size: 12px; margin-top: 3px; }
+  .patient-name { font-weight: bold; }      
+  .patient-meta { color: #666; font-size: 12px; margin-top: 3px;}
+  
   .walkin-tag {
     background: #a33;
-    color: #fff;
+    color: #fff;     
     font-size: 10px;
     padding: 1px 5px;
-    border-radius: 2px;
-    margin-right: 6px;
+    border-radius: 2px;   
+      margin-right: 6px;
   }
-  .empty-msg { padding: 10px; color: #999; font-size: 13px; }
-</style>
+  .empty-msg {padding: 10px; color: #999; font-size: 13px;}
+  .card-actions { margin-top: 8px;}
+  .card-actions button {margin-top: 0; margin-right: 6px; font-size: 12px; padding: 4px 8px;}
+</style>    
 </head>
-<body>
+<body>        
 
-<div id="auth-screen" class="box">
+<div id="auth-screen" class="box">       
   <h2 id="auth-title">Clinic Login</h2>
 
   <div id="login-form">
     <label>Clinic ID</label>
     <input type="text" id="login-clinic-id" placeholder="e.g. CLINIC_001">
+    
     <label>Password</label>
     <input type="password" id="login-password">
+    
     <button onclick="doLogin()">Log In</button>
     <div id="login-error" class="error-msg"></div>
     <div class="toggle-link" onclick="showRegister()">Don't have an account? Register</div>
@@ -126,16 +133,19 @@
   <div id="register-form" style="display:none;">
     <label>Choose a Clinic ID</label>
     <input type="text" id="reg-clinic-id" placeholder="e.g. MY_CLINIC">
-    <label>Choose a Password</label>
+    
+    <label>Choose a Password</label>     
     <input type="password" id="reg-password">
+    
     <label>Invite Code</label>
     <input type="text" id="reg-invite-code" placeholder="admin invite code">
+    
     <button onclick="doRegister()">Register</button>
     <div id="register-error" class="error-msg"></div>
     <div class="toggle-link" onclick="showLogin()">Already have an account? Log in</div>
   </div>
-</div>
-
+</div>     
+               
 <div id="dashboard">
   <div class="top-bar">
     <div>
@@ -148,7 +158,7 @@
     </div>
   </div>
 
-  <!-- new patient form,-->
+  <!-- patient intake form -->
   <div class="add-patient-form">
     <div class="row">
       <div>
@@ -176,244 +186,322 @@
       <div class="column-header">Up Next</div>
       <div id="col-scheduled"></div>
     </div>
+    
     <div class="column">
       <div class="column-header">In Lobby</div>
       <div id="col-waiting"></div>
     </div>
+    
     <div class="column">
       <div class="column-header">With Doctor</div>
       <div id="col-consult"></div>
     </div>
-  </div>
-</div>
+  </div>     
+</div>     
 
 <script>
-//storing clinic_id in localstorage so refreshing page doesnt log u out
-//NOT storing password anywhere, only the clinic id
-let clinicId = localStorage.getItem("clinicq_clinic_id");
+// dumping clinic id in localstorage so we dont lose it on refresh lol
+// NOT storing pw anywhere cause security 
+let currentClinic = localStorage.getItem("clinicq_clinic_id");
 
 window.onload = function () {
-  if (clinicId) {
-    showDashboard();
+  if (currentClinic) {
+    showDash();
   }
 };
 
-//just swapping which form is visible, nothing fancy
 function showRegister() {
   document.getElementById("login-form").style.display = "none";
   document.getElementById("register-form").style.display = "block";
   document.getElementById("auth-title").innerText = "Register Clinic";
 }
+
 function showLogin() {
   document.getElementById("register-form").style.display = "none";
   document.getElementById("login-form").style.display = "block";
   document.getElementById("auth-title").innerText = "Clinic Login";
 }
 
-//hits the login api, if it works we save clinic id and switch to dashboard
-async function doLogin() {
-  const id = document.getElementById("login-clinic-id").value.trim();
-  const pw = document.getElementById("login-password").value;
-  const errBox = document.getElementById("login-error");
-  errBox.innerText = "";
+// login hit
+async function doLogin() {   
+  let c_id = document.getElementById("login-clinic-id").value.trim();
+  let pwd = document.getElementById("login-password").value;
+  let err = document.getElementById("login-error");
+  err.innerText = "";
 
-  if (!id || !pw) {
-    errBox.innerText = "enter clinic id and password";
+  if (!c_id || !pwd) {
+    err.innerText = "enter clinic id and password please";
     return;
   }
 
   try {
-    const res = await fetch("/api/login", {
+    let res = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clinic_id: id, password: pw })
-    });
-    const data = await res.json();
-
-    if (!data.success) {
-      errBox.innerText = data.error || "login failed";
+      body: JSON.stringify({ clinic_id: c_id, password: pwd })
+    });     
+    
+    let result = await res.json();
+    // console.log(result);
+   
+    if (!result.success) {
+      err.innerText = result.error || "login failed rip";
       return;
     }
 
-    clinicId = data.clinic_id;
-    localStorage.setItem("clinicq_clinic_id", clinicId);
-    showDashboard();
-
-  } catch (err) {
-    errBox.innerText = "couldnt reach server, try again";
-    console.error(err);     
+    currentClinic = result.clinic_id;
+    localStorage.setItem("clinicq_clinic_id", currentClinic);
+    showDash();
+    
+  } catch (e) {
+    err.innerText = "server down?? try again";
+    console.error(e);
   }
 }
 
-//same idea as login but for making a new clinic account, needs invite code
+// same as login but for reg  
 async function doRegister() {
-  const id = document.getElementById("reg-clinic-id").value.trim();     
-  const pw = document.getElementById("reg-password").value;
-  const invite = document.getElementById("reg-invite-code").value.trim();
-  const errBox = document.getElementById("register-error");
-  errBox.innerText = "";
+  let c_id = document.getElementById("reg-clinic-id").value.trim();
+  let pwd = document.getElementById("reg-password").value;
+  let inv = document.getElementById("reg-invite-code").value.trim();
+  let err = document.getElementById("register-error");
+  err.innerText = "";
 
-  if (!id || !pw || !invite) {
-    errBox.innerText = "fill in all fields";
+  if (!c_id || !pwd || !inv) {
+    err.innerText = "fill in all fields...";
     return;
   }
-
+      
   try {
-    const res = await fetch("/api/register", {
+    let res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clinic_id: id, password: pw, invite_code: invite })
+      body: JSON.stringify({ clinic_id: c_id, password: pwd, invite_code: inv })
     });
-    const data = await res.json();
-
-    if (!data.success) {
-      errBox.innerText = data.error || "registration failed";
-      return;
+    let result = await res.json();
+     
+    if (!result.success) {
+      err.innerText = result.error || "registration failed";
+      return;    
     }
 
     showLogin();
-    document.getElementById("login-clinic-id").value = id;
+    document.getElementById("login-clinic-id").value = c_id; // auto fill it 
 
-  } catch (err) {
-    errBox.innerText = "couldnt reach server, try again";    
-    console.error(err);
+  } catch (e) {
+    err.innerText = "server error, check console";
+    console.error(e);
   }
 }
 
-//clear the saved clinic id and go back to login screen
-function logout() {
-  clinicId = null;
-  localStorage.removeItem("clinicq_clinic_id");
+function logout() {               
+  currentClinic = null;           
+  localStorage.removeItem("clinicq_clinic_id");                                     
   document.getElementById("dashboard").style.display = "none";
   document.getElementById("auth-screen").style.display = "block";
 }
 
-function showDashboard() {
+function showDash() {
   document.getElementById("auth-screen").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
-  document.getElementById("clinic-label").innerText = "Logged in as " + clinicId;
+  document.getElementById("clinic-label").innerText = "Logged in as " + currentClinic;                    
+  
   loadQueue();
-}
+}    
 
-//pulls current queue from the sheet and re draws the 3 columns
-async function loadQueue() {
-  try {
-    const res = await fetch("/api/queue?clinic_id=" + encodeURIComponent(clinicId));
-    const data = await res.json();
+// get patients list from backend                   
+async function loadQueue() {                   
+  try {    
+    let response = await fetch("/api/queue?clinic_id=" + encodeURIComponent(currentClinic));
+    let parsed = await response.json();
 
-    if (!data.success) {
-      console.error("queue error:", data.error);
-      return;            
-    }
-
-    renderQueue(data.patients);
-
-  } catch (err) {
-    console.error("failed to load queue:", err);
-  }
-}
-
-//sorts patients into the right column based on status, also shows the
-//empty msg if a column has nobody in it so it doesnt look broken/blank
-function renderQueue(patients) {
-  const scheduledCol = document.getElementById("col-scheduled");
-  const waitingCol = document.getElementById("col-waiting");
-  const consultCol = document.getElementById("col-consult");
-
-  scheduledCol.innerHTML = "";
-  waitingCol.innerHTML = "";
-  consultCol.innerHTML = "";
-
-  let counts = { Scheduled: 0, Waiting: 0, "In Consult": 0 };
-
-  patients.forEach(function (p) {
-    const card = buildPatientCard(p);
-
-    if (p.Status === "Scheduled") {
-      scheduledCol.appendChild(card);
-      counts.Scheduled++;
-    } else if (p.Status === "Waiting") {
-      waitingCol.appendChild(card);      
-      counts.Waiting++;
-    } else if (p.Status === "In Consult") {
-      consultCol.appendChild(card);
-      counts["In Consult"]++;
+    if (!parsed.success) {
+      console.error("queue error...", parsed.error);
+      return;
     }   
+
+    drawColumns(parsed.patients);
+
+  } catch (e) {
+    console.error("failed to load queue bruh", e);
+  }
+}       
+
+// sorting patients into columns. adding empty msg so UI doesnt look broken
+function drawColumns(patients) {
+  let schedCol = document.getElementById("col-scheduled");
+  let waitCol = document.getElementById("col-waiting");
+  let docRoom = document.getElementById("col-consult");
+
+  schedCol.innerHTML = "";
+  waitCol.innerHTML = "";
+  docRoom.innerHTML = "";
+
+  // counting to check if empty later
+  let stats = { Scheduled: 0, Waiting: 0, "In Consult": 0 };
+
+  patients.forEach(function (pt) {
+    let cardHtml = makeCard(pt);
+
+    if (pt.Status === "Scheduled") {
+      schedCol.appendChild(cardHtml);
+      stats.Scheduled++;
+    } else if (pt.Status === "Waiting") {
+      waitCol.appendChild(cardHtml);
+      stats.Waiting++;
+    } else if (pt.Status === "In Consult") {
+      docRoom.appendChild(cardHtml);
+      stats["In Consult"]++;
+    } 
   });
 
-  if (counts.Scheduled === 0) scheduledCol.innerHTML = '<div class="empty-msg">nothing scheduled</div>';
-  if (counts.Waiting === 0) waitingCol.innerHTML = '<div class="empty-msg">lobby is empty</div>';
-  if (counts["In Consult"] === 0) consultCol.innerHTML = '<div class="empty-msg">no one with doctor</div>';
+  // inject empty msgs
+  if (stats.Scheduled === 0) schedCol.innerHTML = '<div class="empty-msg">nothing scheduled</div>';
+  if (stats.Waiting === 0) waitCol.innerHTML = '<div class="empty-msg">lobby is empty</div>';
+  if (stats["In Consult"] === 0) docRoom.innerHTML = '<div class="empty-msg">doc is free</div>';
 }
 
-//makes the little card for one patient.. no buttons on this yet, thats next
-function buildPatientCard(p) {
-  const card = document.createElement("div");
-  card.className = "patient-card";             
 
-  const walkinTag = p.Is_Walk_In === "True" ? '<span class="walkin-tag">WALK-IN</span>' : "";
-  const timeShown = p.Status === "Scheduled" ? p.Scheduled_Time : (p.Consult_Start_Time || "--:--");
+function makeCard(pt) {
+  let c = document.createElement("div");
+  c.className = "patient-card";    
 
-  card.innerHTML =
-    '<div class="patient-name">' + walkinTag + "#" + p.ID + " — " + p.Patient_Name + "</div>" +
-    '<div class="patient-meta">' + timeShown + " &middot; " + p.Phone + "</div>";
+  let isWalkin = pt.Is_Walk_In === "True" ? '<span class="walkin-tag">WALK-IN</span>' : "";
+  let dispTime = pt.Status === "Scheduled" ? pt.Scheduled_Time : (pt.Consult_Start_Time || "--:--");
 
-  return card;
+  // conditional buttons based on status
+  let btns = "";
+  if (pt.Status === "Scheduled") {
+    btns = '<button onclick="updatePtStatus(\'' + pt.ID + '\', \'Waiting\')">Check In</button>' +
+           '<button class="danger" onclick="updatePtStatus(\'' + pt.ID + '\', \'Skipped\')">No-Show</button>';
+  } else if (pt.Status === "Waiting") {
+    btns = '<button onclick="sendToDoc(\'' + pt.ID + '\')">Call To Room</button>' +
+           '<button class="danger" onclick="updatePtStatus(\'' + pt.ID + '\', \'Skipped\')">Skip</button>';
+  } else if (pt.Status === "In Consult") {
+    btns = '<button onclick="updatePtStatus(\'' + pt.ID + '\', \'Completed\')">Mark Done</button>';
+  }
+ 
+  c.innerHTML =
+    '<div class="patient-name">' + isWalkin + "#" + pt.ID + " - " + pt.Patient_Name + "</div>" +
+    '<div class="patient-meta">' + dispTime + " &middot; " + pt.Phone + "</div>" +
+    '<div class="card-actions">' + btns + "</div>";            
+         
+  return c;                                  
+}      
+
+// updates status in db  
+async function updatePtStatus(pId, newStat) {    
+  try {
+    let r = await fetch("/api/patients/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clinic_id: currentClinic, patient_id: pId, new_status: newStat })
+    });
+    let d = await r.json();
+
+    if (!d.success) {
+      alert(d.error || "error updating status");
+      return;
+    }
+    loadQueue();
+
+  } catch (e) {
+    alert("network issue...");   
+    console.error(e);
+  }
+}     
+
+// calling to room needs timestamp so doing this separately
+function sendToDoc(pId) {      
+  let n = new Date();
+  let timeStr = n.getHours().toString().padStart(2, "0") + ":" + n.getMinutes().toString().padStart(2, "0");
+  
+  updatePtStatusTime(pId, "In Consult", timeStr);
 }
 
-//new patient form logic. defaults date to today since this is same day
-//queue system, doesnt make sense to schedule for other days rn
-async function addPatient(isWalkIn) {
-  const name = document.getElementById("new-name").value.trim();
-  const phone = document.getElementById("new-phone").value.trim();
-  const time = document.getElementById("new-time").value;
-  const errBox = document.getElementById("add-error");
-  errBox.innerText = "";     
-
-  if (!name || !phone) {    
-    errBox.innerText = "name and phone are required";
-    return;
-  }
-                
-  // walk ins dont need a scheduled time, theyre already here
-  if (!isWalkIn && !time) {
-    errBox.innerText = "pick a scheduled time, or use add walk-in instead";
-    return;
-  }
-
-  const today = new Date().toISOString().split("T")[0];
-
-  try {    
-    const res = await fetch("/api/patients", {
+async function updatePtStatusTime(pId, newStat, startTime) {
+  try {
+    let r = await fetch("/api/patients/status", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        clinic_id: clinicId,
-        name: name,
-        phone: phone,
-        scheduled_date: today,
-        scheduled_time: time,
-        is_walk_in: isWalkIn
+        clinic_id: currentClinic,
+        patient_id: pId,
+        new_status: newStat,    
+        consult_start_time: startTime   
       })
     });
-    const data = await res.json();
+    
+    let d = await r.json();
 
-    if (!data.success) {
-      errBox.innerText = data.error || "couldnt add patient";
-      return;
+    if (!d.success) {
+      alert(d.error || "cant update patient");
+      return;     
     }
-
-    document.getElementById("new-name").value = "";
-    document.getElementById("new-phone").value = "";
-    document.getElementById("new-time").value = "";
+    
     loadQueue();
-
-  } catch (err) {
-    errBox.innerText = "couldnt reach server, try again";
-    console.error(err);
+     
+  } catch (e) {
+    alert("network error...");
+    console.error(e);          
   }
 }
-</script>
+         
+// form submit to add new patient to queue         
+async function addPatient(walkInFlag) {
+  let pName = document.getElementById("new-name").value.trim();
+  let pPhone = document.getElementById("new-phone").value.trim();
+  let pTime = document.getElementById("new-time").value;
+  let err = document.getElementById("add-error");
+  err.innerText = "";         
+      
+  if (!pName || !pPhone) {
+    err.innerText = "need name and phone at least";
+    return;      
+  }      
 
+  // walk ins r already here so skip time check
+  if (!walkInFlag && !pTime) {
+    err.innerText = "add a time or click add walk-in";
+    return;
+  }
+
+  // always today for now
+  let dDate = new Date().toISOString().split("T")[0];
+
+  try {         
+    let r = await fetch("/api/patients", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({           
+        clinic_id: currentClinic,
+        name: pName,
+        phone: pPhone,
+        scheduled_date: dDate,
+        scheduled_time: pTime,              
+        is_walk_in: walkInFlag      
+      })
+    });
+         
+    let result = await r.json();
+
+          
+     if (!result.success) {
+      err.innerText = result.error || "failed to save to db";
+      return;  
+    }
+
+    // clearing inputs 
+    document.getElementById("new-name").value = "";
+     document.getElementById("new-phone").value = "";
+    document.getElementById("new-time").value = "";
+    loadQueue();
+    
+  } catch (e) {
+    err.innerText = "network failed, try again";
+    console.error(e);                                                
+  }
+}                 
+</script>
 </body>
-</html>      
+  </html>         
