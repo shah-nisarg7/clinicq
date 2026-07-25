@@ -152,8 +152,59 @@ def _get_auth_sheet(spreadsheet):
         print("[DB] Created System_Auth tab with default credentials.")
         return auth_sheet, True
 
+def _get_settings_sheet(spreadsheet):
+    #seperate tab that tracks doctor status + delay per clinic , same idea as system_auth (passwords and all) 
+    try:
+        return spreadsheet.worksheet("Clinic_Settings")
+    except gspread.exceptions.WorksheetNotFound:
+        sheet = spreadsheet.add_worksheet("Clinic_Settings", rows = "100",cols = "3")
+        sheet.append_row(["Clinic_ID", "Doctor_Status", "Delay_Minutes"])
+        return sheet 
 
-def find_patient_by_id(worksheet,patient_id:str):
+
+def get_clinic_settings(client,clinic_id:str)-> dict:
+    spreadsheet = client.open(SPREADSHEET_NAME)
+    sheet = _get_settings_sheet(spreadsheet)
+    records = sheet.get_all_records()
+
+    for row in records:
+        if str(row.get("Clinic_ID", "")).strip().upper() == clinic_id:
+            return{
+                "doctor_status" : row.get("Doctor_Status","Not Arrived"),
+                "delay_minutes" : row.get("Delay_Minutes",0)
+            }
+
+    #no row for a clinic yet, so creating one with defaults
+    sheet.append_row([clinic_id,"Not Arrived","0"])
+    return { "doctor_status": "Not Arrived", "delay_minutes" : 0}
+
+
+def update_clinic_settings (client,clinic_id:str,doctor_status:str = None, delay_minutes = None):
+    spreadsheet = client.open(SPREADSHEET_NAME)
+    sheet = _get_settings_sheet(spreadsheet)
+    records = sheet.get_all_records()
+
+    row_idx = None
+    for i, row in enumerate(records,start = 2): #starting w 2 bcs first row is headers
+        if str(row.get("Clinic_ID","")).strip().upper() == clinic_id:
+            row_idx = i
+            break 
+
+    if row_idx is None:
+        #clinic has no settings row rn, making one with defaults 
+        #go back and update it below
+        sheet.append_row([clinic_id,"Not Arrived","0"])
+        row_idx = len(records) + 2
+
+
+    if doctor_status is not None:     
+        sheet.update_cell(row_idx,2,doctor_status)
+
+    if delay_minutes is not None:
+        sheet.update_cell(row_idx,3,str(delay_minutes))
+    
+                
+def find_patient_by_id(worksheet,patient_id:str):         
     #need this for the queue actions (call to room, mark done etc)
     #since frontend only sends us the patient id not their row number in the sheet
     all_p = fetch_all_patients(worksheet)

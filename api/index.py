@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify
 import database as db
 import traceback
 
-app = Flask(__name__)
+app = Flask(__name__)   
 
 _client = None
 
@@ -17,11 +17,11 @@ def get_client():
     global _client
     if _client is None:
         _client = db.get_gspread_client()
-
-    return _client         
+              
+    return _client                
               
 
-@app.route("/api/login",methods=["POST"])
+@app.route("/api/login",methods=["POST"]) 
 def login():
     data = request.get_json(force = True)           
     clinic_id = (data.get("clinic_id") or "").strip().upper()
@@ -97,7 +97,43 @@ def get_queue():
 
     return jsonify({"success": True,"patients":patients})
 
+@app.route("/api/settings",methods=["GET"])
+def get_settings():
+    clinic_id = (request.args.get("clinic_id") or "").strip().upper()
+    if not clinic_id:
+        return jsonify({"success": False, "error":"missing clinic_id"}),400
 
+    try:
+        client = get_client()
+        settings = db.get_clinic_settings(client,clinic_id)
+        
+    except Exception as e:
+        print("[api] settings error ",e)
+        traceback.print_exc()
+        return jsonify({"success":False, "error":"couldnt load settings"})
+
+    return jsonify({"success":True,"settings":settings})
+
+@app.route("/api/settings", methods=["POST"])
+def update_settings():
+    data = request.get_json(force=True)
+    clinic_id = (data.get("clinic_id") or "").strip().upper()
+    doctor_status = data.get("doctor_status")
+    delay_minutes = data.get("delay_minutes")
+
+    if not clinic_id:
+        return jsonify({"success": False, "error": "missing clinic_id"}), 400
+
+    try:
+        client = get_client()
+        db.update_clinic_settings(client, clinic_id, doctor_status, delay_minutes)
+    except Exception as e:
+        print("[API] settings update error", e)
+        traceback.print_exc()
+        return jsonify({"success": False, "error": "couldnt update settings"}), 500
+    
+    return jsonify({"success": True})
+      
 @app.route("/api/patients",methods=["POST"])
 def add_patient():
     data = request.get_json(force = True)
@@ -106,7 +142,7 @@ def add_patient():
     phone = (data.get("phone") or "").strip()
     scheduled_date = (data.get("scheduled_date") or "").strip()
     scheduled_time = (data.get("scheduled_time")or "").strip()
-    is_walk_in = bool(data.get("is_walk_in",False))
+    is_walk_in = bool(data.get("is_walk_in",False))   
 
     if not clinic_id or not name or not phone:
         return jsonify({"success": False, "error": "missing name, phone, or clinic id"}),400
@@ -116,7 +152,7 @@ def add_patient():
         client = get_client()
         worksheet = db.get_or_create_clinic_worksheet(client,clinic_id)
         new_patient = db.add_patient(worksheet,name,phone,scheduled_date,scheduled_time,is_walk_in)
-
+                        
     except Exception as e:
         print("[API add patient error",e)
         traceback.print_exc()
@@ -163,4 +199,4 @@ def udpate_status():
         return jsonify({"success":False,"error":"couldnt update patient "}),500
     
     return jsonify({"success":True})
-
+       
