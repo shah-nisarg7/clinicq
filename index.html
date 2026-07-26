@@ -93,16 +93,16 @@
     border-radius: 6px;
     overflow: hidden;
   }
-  .column-header {      
-    background: #f5f7f9;                       
+  .column-header {
+    background: #f5f7f9;
     padding: 9px 12px;
     font-weight: bold;
      font-size: 13px;
     color: #55606b;
     border-bottom: 1px solid #d8dee4;}
-             
+         
   .patient-card {
-    border-bottom: 1px solid #eee;     
+    border-bottom: 1px solid #eee;
     padding: 11px 12px;
      font-size: 14px; }
   .patient-card:last-child { border-bottom: none; }
@@ -111,8 +111,8 @@
   
   .walkin-tag {
     background: #b84040;
-    color: #fff;         
-    font-size: 10px;      
+    color: #fff;     
+    font-size: 10px;
     padding: 1px 6px;
     border-radius: 3px;   
       margin-right: 6px;
@@ -144,7 +144,7 @@
 
 <div id="auth-screen" class="box">       
   <h2 id="auth-title">Clinic Login</h2>
-  <div class="login-subtitle">Queue Management System</div>
+  <div class="login-subtitle">queue management, no signup spam i promise</div>
 
   <div id="login-form">
     <label>Clinic ID</label>
@@ -431,7 +431,7 @@ async function toggleDocStatus() {
     console.error(e);
   }
 }
-            
+
 async function saveDelay() {
   let mins = document.getElementById("delay-input").value;
 
@@ -442,11 +442,11 @@ async function saveDelay() {
       body: JSON.stringify({ clinic_id: currentClinic, delay_minutes: mins })
     });
     let d = await r.json();
-                             
-    if (!d.success) {          
+
+    if (!d.success) {
       alert(d.error || "couldnt save delay");
       return;
-    }                   
+    }
     loadDocStatus();
 
   } catch (e) {
@@ -468,8 +468,12 @@ function drawColumns(patients) {
   // counting to check if empty later
   let stats = { Scheduled: 0, Waiting: 0, "In Consult": 0 };
 
+  // doc can only see one patient at a time, so if someones already in
+  // consult we shouldnt let anyone else get called in
+  let someoneInConsult = patients.some(function (pt) { return pt.Status === "In Consult"; });
+
   patients.forEach(function (pt) {
-    let cardHtml = makeCard(pt);
+    let cardHtml = makeCard(pt, someoneInConsult);
 
     if (pt.Status === "Scheduled") {
       schedCol.appendChild(cardHtml);
@@ -490,7 +494,7 @@ function drawColumns(patients) {
 }
 
 
-function makeCard(pt) {
+function makeCard(pt, someoneInConsult) {
   let c = document.createElement("div");
   c.className = "patient-card";    
 
@@ -503,9 +507,13 @@ function makeCard(pt) {
     btns = '<button onclick="updatePtStatus(\'' + pt.ID + '\', \'Waiting\')">Check In</button>' +
            '<button class="danger" onclick="updatePtStatus(\'' + pt.ID + '\', \'Skipped\')">No-Show</button>';
   } else if (pt.Status === "Waiting") {
-    // cant call someone in if doc isnt even here yet
+    // cant call someone in if doc isnt even here yet, or doc is already
+    // busy with someone else (one patient in the room at a time)
     if (docStatus !== "Arrived") {
       btns = '<button disabled title="doctor hasnt arrived yet">Call To Room</button>' +
+             '<button class="danger" onclick="updatePtStatus(\'' + pt.ID + '\', \'Skipped\')">Skip</button>';
+    } else if (someoneInConsult) {
+      btns = '<button disabled title="doctor is with another patient rn">Call To Room</button>' +
              '<button class="danger" onclick="updatePtStatus(\'' + pt.ID + '\', \'Skipped\')">Skip</button>';
     } else {
       btns = '<button onclick="sendToDoc(\'' + pt.ID + '\')">Call To Room</button>' +

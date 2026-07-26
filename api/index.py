@@ -116,13 +116,13 @@ def get_settings():
 
 @app.route("/api/settings", methods=["POST"])
 def update_settings():
-    data = request.get_json(force=True)
+    data = request.get_json(force=True)          
     clinic_id = (data.get("clinic_id") or "").strip().upper()
     doctor_status = data.get("doctor_status")
     delay_minutes = data.get("delay_minutes")
 
     if not clinic_id:
-        return jsonify({"success": False, "error": "missing clinic_id"}), 400
+        return jsonify({"success": False, "error": "missing clinic_id"}), 400              
 
     try:
         client = get_client()
@@ -179,8 +179,19 @@ def udpate_status():
         worksheet = db.get_or_create_clinic_worksheet(client,clinic_id)
         patient = db.find_patient_by_id(worksheet,patient_id)
 
-        if patient is None:     
+        if patient is None:
            return jsonify({"success": False, "error": "patient not found"}), 404
+
+        # doctor can only see one patient at a time, so blocking this if
+        # someone else is alr in consult 
+        if new_status == "In Consult":
+            active_patients = db.fetch_active_queue(worksheet)
+            already_in_consult = any(
+                p["ID"] != str(patient["ID"]) and p["Status"] == "In Consult"
+                for p in active_patients
+            )
+            if already_in_consult:
+                return jsonify({"success": False, "error": "doctor is already with another patient"}), 409
 
         extra_fields = {}    
         if new_status == "In Consult":
@@ -190,7 +201,7 @@ def udpate_status():
         db.update_patient_status(worksheet,patient,new_status,extra_fields)
 
     except ValueError as e:     
-        #invalid status string from our own VALID_STATUSES check
+        #invalid status  from our own VALID_STATUSES check
          return jsonify({"success": False, "error": str(e)}), 400
     
     except Exception as e:
