@@ -9,54 +9,57 @@
     
   body {
     font-family: Arial, Helvetica, sans-serif;
-    background: #f4f4f4;
-     color: #222;            
+    background: #eef1f4;
+     color: #2b2b2b;            
     margin: 0;
        padding: 20px;              
   }    
   
-    h1 { margin: 0 0 4px 0; }
-  .subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
+    h1 { margin: 0 0 4px 0; font-size: 22px; color: #1a2b3c; }
+  .subtitle { color: #6b7785; font-size: 13px; margin-bottom: 20px; }
 
   .box {background: #fff;                                     
-    border: 1px solid #ccc;      
+    border: 1px solid #d8dee4;      
      border-radius: 6px;        
-    padding: 18px;
+    padding: 20px;
        max-width: 400px;
-    margin: 40px auto;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);}
-  .box h2 {margin-top: 0; font-size: 18px;}
-  .box .login-subtitle { color: #888; font-size: 12px; margin-top: -8px; margin-bottom: 14px;}
+    margin: 60px auto;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);}
+  .box h2 {margin-top: 0; font-size: 19px; color: #1a2b3c;}
+  .box .login-subtitle { color: #94a0ac; font-size: 12px; margin-top: -8px; margin-bottom: 16px;}
 
-  label { display: block; margin-top: 10px; font-size: 13px; color: #444; }
+  label { display: block; margin-top: 10px; font-size: 13px; color: #55606b; }
   input {     
     width: 100%;                   
-     padding: 6px;      
-    border: 1px solid #bbb;
-    border-radius: 3px;        
+     padding: 7px 8px;      
+    border: 1px solid #c7cdd3;
+    border-radius: 4px;        
       margin-top: 3px;
     font-size: 14px;}             
+  input:focus { outline: none; border-color: #3a6ea5; }
   button {
     background: #2c5f9e;
     color: #fff;
      border: none;     
-    padding: 8px 14px;
-      border-radius: 3px;    
+    padding: 8px 16px;
+      border-radius: 4px;    
     cursor: pointer;   
     font-size: 14px;
      margin-top: 14px;
   }
   button:hover {background: #234b7d;}
+  button:disabled { background: #ccc; cursor: not-allowed; }
   
   /* secondary btn styles */
-  button.secondary { background: #777; }
-  button.secondary:hover {background: #5c5c5c;}
+  button.secondary { background: #6b7785; }
+  button.secondary:hover {background: #55606b;}
   
-  button.danger {background: #a33; }
-  button.danger:hover {background: #822;}
+  button.danger {background: #b84040; }
+  button.danger:hover {background: #963333;}
 
-  .error-msg {color: #a33; font-size: 13px; margin-top: 8px;}
+  .error-msg {color: #b84040; font-size: 13px; margin-top: 8px;}
   .toggle-link { font-size: 13px; color: #2c5f9e; cursor: pointer; margin-top: 10px; display: inline-block;}
+  .toggle-link:hover { text-decoration: underline; }
 
   #dashboard {display: none;}
   
@@ -64,15 +67,16 @@
     display: flex;
      justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #ccc;
-       padding-bottom: 10px;
+    border-bottom: 1px solid #d8dee4;
+       padding-bottom: 12px;
     margin-bottom: 20px;
   }   
 
   .add-patient-form {    
     background: #fff;
-    border: 1px solid #ccc;
-    padding: 14px;
+    border: 1px solid #d8dee4;
+    border-radius: 6px;
+    padding: 16px;
      margin-bottom: 20px;}
   .add-patient-form .row { display: flex; gap: 10px; flex-wrap: wrap;}
   .add-patient-form .row > div {flex: 1; min-width: 140px;}
@@ -85,40 +89,43 @@
     flex: 1;
     min-width: 260px;
       background: #fff;
-    border: 1px solid #ccc;
+    border: 1px solid #d8dee4;
+    border-radius: 6px;
+    overflow: hidden;
   }
-  .column-header {
-    background: #eee;
-    padding: 8px 10px;
+  .column-header {      
+    background: #f5f7f9;                       
+    padding: 9px 12px;
     font-weight: bold;
      font-size: 13px;
-    border-bottom: 1px solid #ccc;}
-         
+    color: #55606b;
+    border-bottom: 1px solid #d8dee4;}
+             
   .patient-card {
-    border-bottom: 1px solid #eee;
-    padding: 10px;
+    border-bottom: 1px solid #eee;     
+    padding: 11px 12px;
      font-size: 14px; }
   .patient-card:last-child { border-bottom: none; }
-  .patient-name { font-weight: bold; }      
-  .patient-meta { color: #666; font-size: 12px; margin-top: 3px;}
+  .patient-name { font-weight: bold; color: #1a2b3c; }      
+  .patient-meta { color: #6b7785; font-size: 12px; margin-top: 3px;}
   
   .walkin-tag {
-    background: #a33;
-    color: #fff;     
-    font-size: 10px;
-    padding: 1px 5px;
-    border-radius: 2px;   
+    background: #b84040;
+    color: #fff;         
+    font-size: 10px;      
+    padding: 1px 6px;
+    border-radius: 3px;   
       margin-right: 6px;
   }
-  .empty-msg {padding: 10px; color: #999; font-size: 13px;}
-  .card-actions { margin-top: 8px;}
-  .card-actions button {margin-top: 0; margin-right: 6px; font-size: 12px; padding: 4px 8px;}
+  .empty-msg {padding: 14px 12px; color: #a3adb8; font-size: 13px;}
+  .card-actions { margin-top: 9px;}
+  .card-actions button {margin-top: 0; margin-right: 6px; font-size: 12px; padding: 5px 9px;}
 
   /* doctor arrived / delay banner, red until doctor shows up */
   .doc-banner {
-    padding: 10px 14px;
+    padding: 11px 14px;
     margin-bottom: 16px;
-    border-radius: 4px;
+    border-radius: 6px;
     display: flex;
      justify-content: space-between;
     align-items: center;
@@ -126,8 +133,8 @@
     gap: 10px;
     font-size: 14px;
   }
-  .doc-banner.not-here { background: #fde8e8; border: 1px solid #d99; }
-  .doc-banner.here { background: #e6f4e6; border: 1px solid #9c9; }
+  .doc-banner.not-here { background: #fbeaea; border: 1px solid #e0b4b4; color: #7a2e2e; }
+  .doc-banner.here { background: #e8f3e8; border: 1px solid #b3d1b3; color: #2e5e2e; }
   .doc-banner .right-side { display: flex; align-items: center; gap: 8px; }
   .doc-banner input[type="number"] { width: 70px; margin-top: 0; display: inline-block; }
   .doc-banner button { margin-top: 0; font-size: 13px; padding: 6px 10px; }
@@ -155,7 +162,7 @@
     <label>Choose a Clinic ID</label>
     <input type="text" id="reg-clinic-id" placeholder="e.g. MY_CLINIC">
     
-    <label>Choose a Password</label>         
+    <label>Choose a Password</label>     
     <input type="password" id="reg-password">
     
     <label>Invite Code</label>
@@ -424,7 +431,7 @@ async function toggleDocStatus() {
     console.error(e);
   }
 }
-
+            
 async function saveDelay() {
   let mins = document.getElementById("delay-input").value;
 
@@ -435,11 +442,11 @@ async function saveDelay() {
       body: JSON.stringify({ clinic_id: currentClinic, delay_minutes: mins })
     });
     let d = await r.json();
-
-    if (!d.success) {
+                             
+    if (!d.success) {          
       alert(d.error || "couldnt save delay");
       return;
-    }
+    }                   
     loadDocStatus();
 
   } catch (e) {
@@ -534,7 +541,7 @@ async function updatePtStatus(pId, newStat) {
 
   } catch (e) {
     alert("network issue...");   
-    console.error(e);     
+    console.error(e);
   }
 }     
 
@@ -629,6 +636,6 @@ async function addPatient(walkInFlag) {
     console.error(e);                                                
   }
 }                 
-</script>              
+</script>
 </body>
-  </html>    
+  </html>
