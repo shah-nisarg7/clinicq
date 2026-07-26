@@ -20,11 +20,13 @@
 
   .box {background: #fff;                                     
     border: 1px solid #ccc;      
-     border-radius: 4px;        
-    padding: 16px;
-    max-width: 400px;
-       margin: 40px auto;}
+     border-radius: 6px;        
+    padding: 18px;
+       max-width: 400px;
+    margin: 40px auto;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);}
   .box h2 {margin-top: 0; font-size: 18px;}
+  .box .login-subtitle { color: #888; font-size: 12px; margin-top: -8px; margin-bottom: 14px;}
 
   label { display: block; margin-top: 10px; font-size: 13px; color: #444; }
   input {     
@@ -111,12 +113,31 @@
   .empty-msg {padding: 10px; color: #999; font-size: 13px;}
   .card-actions { margin-top: 8px;}
   .card-actions button {margin-top: 0; margin-right: 6px; font-size: 12px; padding: 4px 8px;}
+
+  /* doctor arrived / delay banner, red until doctor shows up */
+  .doc-banner {
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    border-radius: 4px;
+    display: flex;
+     justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .doc-banner.not-here { background: #fde8e8; border: 1px solid #d99; }
+  .doc-banner.here { background: #e6f4e6; border: 1px solid #9c9; }
+  .doc-banner .right-side { display: flex; align-items: center; gap: 8px; }
+  .doc-banner input[type="number"] { width: 70px; margin-top: 0; display: inline-block; }
+  .doc-banner button { margin-top: 0; font-size: 13px; padding: 6px 10px; }
 </style>    
 </head>
 <body>        
 
 <div id="auth-screen" class="box">       
   <h2 id="auth-title">Clinic Login</h2>
+  <div class="login-subtitle">Queue Management System</div>
 
   <div id="login-form">
     <label>Clinic ID</label>
@@ -134,7 +155,7 @@
     <label>Choose a Clinic ID</label>
     <input type="text" id="reg-clinic-id" placeholder="e.g. MY_CLINIC">
     
-    <label>Choose a Password</label>     
+    <label>Choose a Password</label>         
     <input type="password" id="reg-password">
     
     <label>Invite Code</label>
@@ -155,6 +176,16 @@
     <div>
       <button class="secondary" onclick="loadQueue()">Refresh</button>
       <button class="secondary" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+
+  <!-- doctor status banner, drawDocBanner() fills this in -->
+  <div id="doc-banner" class="doc-banner not-here">
+    <div id="doc-status-text">checking doctor status...</div>
+    <div class="right-side">
+      <input type="number" id="delay-input" placeholder="delay mins" min="0">
+      <button onclick="saveDelay()">Set Delay</button>
+      <button onclick="toggleDocStatus()" id="doc-toggle-btn">Mark Doctor Arrived</button>
     </div>
   </div>
 
@@ -203,6 +234,10 @@
 // dumping clinic id in localstorage so we dont lose it on refresh lol
 // NOT storing pw anywhere cause security 
 let currentClinic = localStorage.getItem("clinicq_clinic_id");
+
+// tracking doctor status locally so the card buttons know whether to
+// let u click "call to room" or not
+let docStatus = "Not Arrived";
 
 window.onload = function () {
   if (currentClinic) {
@@ -307,6 +342,7 @@ function showDash() {
   document.getElementById("clinic-label").innerText = "Logged in as " + currentClinic;                    
   
   loadQueue();
+  loadDocStatus();
 }    
 
 // get patients list from backend                   
@@ -326,6 +362,91 @@ async function loadQueue() {
     console.error("failed to load queue bruh", e);
   }
 }       
+
+// pulls doctor arrived/not + delay mins for this clinic, updates the banner
+async function loadDocStatus() {
+  try {
+    let response = await fetch("/api/settings?clinic_id=" + encodeURIComponent(currentClinic));
+    let parsed = await response.json();
+
+    if (!parsed.success) {
+      console.error("settings error...", parsed.error);
+      return;
+    }
+
+    docStatus = parsed.settings.doctor_status;
+    drawDocBanner(parsed.settings);
+
+  } catch (e) {
+    console.error("failed to load doctor status", e);
+  }
+}
+
+// just flips the banner colors/text depending on arrived or not
+function drawDocBanner(settings) {
+  let banner = document.getElementById("doc-banner");
+  let statusText = document.getElementById("doc-status-text");
+  let toggleBtn = document.getElementById("doc-toggle-btn");
+
+  if (settings.doctor_status === "Arrived") {
+    banner.className = "doc-banner here";
+    statusText.innerText = "Doctor is in. Delay: " + settings.delay_minutes + " min";
+    toggleBtn.innerText = "Mark Doctor Left";
+  } else {
+    banner.className = "doc-banner not-here";
+    statusText.innerText = "Doctor not arrived yet, queue is closed";
+    toggleBtn.innerText = "Mark Doctor Arrived";
+  }
+
+  document.getElementById("delay-input").value = settings.delay_minutes;
+}
+
+// flips arrived <-> not arrived, whatever it currently isnt
+async function toggleDocStatus() {
+  let newStatus = docStatus === "Arrived" ? "Not Arrived" : "Arrived";
+
+  try {
+    let r = await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clinic_id: currentClinic, doctor_status: newStatus })
+    });
+    let d = await r.json();
+
+    if (!d.success) {
+      alert(d.error || "couldnt update doctor status");
+      return;
+    }
+    loadDocStatus();
+
+  } catch (e) {
+    alert("network issue...");
+    console.error(e);
+  }
+}
+
+async function saveDelay() {
+  let mins = document.getElementById("delay-input").value;
+
+  try {
+    let r = await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clinic_id: currentClinic, delay_minutes: mins })
+    });
+    let d = await r.json();
+
+    if (!d.success) {
+      alert(d.error || "couldnt save delay");
+      return;
+    }
+    loadDocStatus();
+
+  } catch (e) {
+    alert("network issue...");
+    console.error(e);
+  }
+}
 
 // sorting patients into columns. adding empty msg so UI doesnt look broken
 function drawColumns(patients) {
@@ -375,8 +496,14 @@ function makeCard(pt) {
     btns = '<button onclick="updatePtStatus(\'' + pt.ID + '\', \'Waiting\')">Check In</button>' +
            '<button class="danger" onclick="updatePtStatus(\'' + pt.ID + '\', \'Skipped\')">No-Show</button>';
   } else if (pt.Status === "Waiting") {
-    btns = '<button onclick="sendToDoc(\'' + pt.ID + '\')">Call To Room</button>' +
-           '<button class="danger" onclick="updatePtStatus(\'' + pt.ID + '\', \'Skipped\')">Skip</button>';
+    // cant call someone in if doc isnt even here yet
+    if (docStatus !== "Arrived") {
+      btns = '<button disabled title="doctor hasnt arrived yet">Call To Room</button>' +
+             '<button class="danger" onclick="updatePtStatus(\'' + pt.ID + '\', \'Skipped\')">Skip</button>';
+    } else {
+      btns = '<button onclick="sendToDoc(\'' + pt.ID + '\')">Call To Room</button>' +
+             '<button class="danger" onclick="updatePtStatus(\'' + pt.ID + '\', \'Skipped\')">Skip</button>';
+    }
   } else if (pt.Status === "In Consult") {
     btns = '<button onclick="updatePtStatus(\'' + pt.ID + '\', \'Completed\')">Mark Done</button>';
   }
@@ -407,7 +534,7 @@ async function updatePtStatus(pId, newStat) {
 
   } catch (e) {
     alert("network issue...");   
-    console.error(e);
+    console.error(e);     
   }
 }     
 
@@ -502,6 +629,6 @@ async function addPatient(walkInFlag) {
     console.error(e);                                                
   }
 }                 
-</script>
+</script>              
 </body>
-  </html>         
+  </html>    
