@@ -1,6 +1,6 @@
 import gspread
 import os
-
+from datetime import datetime 
 SERVICE_ACCOUNT_FILE = os.environ.get("GSHEET_SERVICE_ACCOUNT_JSON", "service_account.json") #getting google cloud service account details
 SPREADSHEET_NAME = os.environ.get("GSHEET_SPREADSHEET_NAME", "Clinic_Queue_MVP")#locating the google sheet (shared to that service account)
 
@@ -8,11 +8,11 @@ GSPREAD_SCOPES = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive",
 ]
-
+    
 
 COL_ID              = 0   
 COL_NAME            = 1   
-COL_PHONE           = 2 
+COL_PHONE           = 2   
 COL_DATE            = 3  
 COL_SCHEDULED       = 4   
 COL_STATUS          = 5   
@@ -30,7 +30,7 @@ HEADER_ROW = [
     "Last_ETA", 
     "Is_Walk_In",   
     "Notification_Status"
-]
+]    
     
 VALID_STATUSES = {"Scheduled", "Waiting", "In Consult", "Completed", "Skipped"}
                   
@@ -102,7 +102,7 @@ def add_patient(
         str(new_id),
         name,
         phone,
-        scheduled_date,
+        scheduled_date,    
         scheduled_time,
         "Scheduled",
         "", # consult start time placeholder
@@ -110,7 +110,7 @@ def add_patient(
         str(is_walk_in), # Walk in flag
         "Pending"        # Notification status
     ]
-    
+         
     worksheet.append_row(new_patient_row, value_input_option="USER_ENTERED")
     print(f"[DB] Added patient {name} (ID ={new_id}) at slot {scheduled_time}")
     
@@ -173,18 +173,18 @@ def get_clinic_settings(client,clinic_id:str)-> dict:
                 "doctor_status" : row.get("Doctor_Status","Not Arrived"),
                 "delay_minutes" : row.get("Delay_Minutes",0)
             }
-
+    
     #no row for a clinic yet, so creating one with defaults
     sheet.append_row([clinic_id,"Not Arrived","0"])
     return { "doctor_status": "Not Arrived", "delay_minutes" : 0}
 
-
+                 
 def update_clinic_settings (client,clinic_id:str,doctor_status:str = None, delay_minutes = None):
     spreadsheet = client.open(SPREADSHEET_NAME)
     sheet = _get_settings_sheet(spreadsheet)
     records = sheet.get_all_records()
-
-    row_idx = None
+     
+    row_idx = None     
     for i, row in enumerate(records,start = 2): #starting w 2 bcs first row is headers
         if str(row.get("Clinic_ID","")).strip().upper() == clinic_id:
             row_idx = i
@@ -196,22 +196,90 @@ def update_clinic_settings (client,clinic_id:str,doctor_status:str = None, delay
         sheet.append_row([clinic_id,"Not Arrived","0"])
         row_idx = len(records) + 2
 
-
-    if doctor_status is not None:     
+      
+    if doctor_status is not None:            
         sheet.update_cell(row_idx,2,doctor_status)
-
+        
     if delay_minutes is not None:
-        sheet.update_cell(row_idx,3,str(delay_minutes))
+        sheet.update_cell(row_idx,3,str(delay_minutes))      
     
                 
 def find_patient_by_id(worksheet,patient_id:str):         
     #need this for the queue actions (call to room, mark done etc)
     #since frontend only sends us the patient id not their row number in the sheet
     all_p = fetch_all_patients(worksheet)
-    for p in all_p:
-        if str(p["ID"]) == str(patient_id):
-            return p
-    return None
+    for p in all_p:     
+        if str(p["ID"]) == str(patient_id):    
+            return p       
+    return None     
+     
+def _get_notification_log_sheet(spreadsheet):            
+    #logs what msgs wouldve gone out, but doesnt acc send anything    
+    try:
+        return spreadsheet.worksheet("Notification_Log")
+    except gspread.exceptions.WorksheetNotFound:
+        sheet = spreadsheet.add_worksheet("Notification_Log",rows = "1000",cols = "6")
+        sheet.append_row(["Clinic_ID", "Patient_Name", "Phone","Message", "Trigger", "Timestamp"])
+        return sheet     
+
+
+def log_notification(client,clinic_id,patient_name,phone,message,trigger):
+    spreadsheet = client.open(SPREADSHEET_NAME)
+    sheet = _get_notification_log_sheet(spreadsheet)
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    sheet.append_row([clinic_id, patient_name, phone, message, trigger, timestamp], value_input_option="USER_ENTERED")
+      
+    
+def get_recent_notifications(client,clinic_id,limit = 20):    
+    spreadsheet = client.open(SPREADSHEET_NAME)       
+    sheet = _get_notification_log_sheet(spreadsheet)
+    records = sheet.get_all_records()
+    clinic_logs = [r for r in records if str(r.get("Clinic_ID","")).strip().upper()== clinic_id]
+    clinic_logs.reverse() #puttingi the neweset one first
+    return clinic_logs[:limit]
+  
+def build_booking_message(clinic_id, patient_name, scheduled_time, is_walk_in):
+    if is_walk_in:
+        return (f"Hi {patient_name}, you've been added to the queue at {clinic_id} as a walk-in. "
+                f"We'll message you with updates as your turn gets closer.")
+    return (f"Hi {patient_name}, your appointment at {clinic_id} is confirmed for {scheduled_time}. "
+            f"We'll message you with updates as your turn gets closer.")
+                            
+
+
+def build_queue_update_message(clinic_id, patient_name, people_ahead):
+    if people_ahead <= 3:
+        return (f"Hi {patient_name}, only {people_ahead} people are ahead of you at {clinic_id}. "
+                f"Please start heading back to the clinic, you'll be seen soon.")
+    return (f"Hi {patient_name}, you're {people_ahead} people away from your turn at {clinic_id}. "
+            f"You still have some time, feel free to step out and come back.")
+              
+def check_queue_notifications(client, clinic_id, worksheet):
+    #after any status change, see if anyone crossed the 5-ahead or 3-ahead
+    #mark and log what wouldve been sent to them. reuses Notification_Status
+    #so we dont log the same threshold twice for the same patient
+    patients = fetch_active_queue(worksheet)
+    waiting = [p for p in patients if p["Status"] == "Waiting"]
+
+    for idx, p in enumerate(waiting):                      
+        people_ahead = idx     
+        notif_status = p.get("Notification_Status", "Pending")        
+
+        if people_ahead <= 3 and notif_status != "3_ahead_sent":
+            msg = build_queue_update_message(clinic_id, p["Patient_Name"], people_ahead)
+            log_notification(client, clinic_id, p["Patient_Name"], p["Phone"], msg, "3_people_ahead")
+            _set_notification_flag(worksheet, p, "3_ahead_sent")
+
+        elif people_ahead <= 5 and notif_status == "Pending":
+            msg = build_queue_update_message(clinic_id, p["Patient_Name"], people_ahead)
+            log_notification(client, clinic_id, p["Patient_Name"], p["Phone"], msg, "5_people_ahead")
+            _set_notification_flag(worksheet, p, "5_ahead_sent")
+
+
+def _set_notification_flag(worksheet, patient, value):
+    row_idx = patient["_row_index"]
+    header_to_col = {h: i + 1 for i, h in enumerate(HEADER_ROW)}
+    worksheet.update_cell(row_idx, header_to_col["Notification_Status"], value)            
 
 def authenticate_clinic(client, clinic_id: str, password: str) -> bool:
     spreadsheet = client.open(SPREADSHEET_NAME)
@@ -226,7 +294,7 @@ def authenticate_clinic(client, clinic_id: str, password: str) -> bool:
             if str(row.get("Password", "")).strip() == password:
                 return True
     return False
-
+  
 
 
 
@@ -239,4 +307,4 @@ def register_new_clinic(client, clinic_id: str, password: str):
     if any(str(row.get("Clinic_ID", "")).strip().upper() == clinic_id for row in records):
         raise ValueError("Clinic ID already exists.")
 
-    auth_sheet.append_row([clinic_id, password])
+    auth_sheet.append_row([clinic_id, password])    

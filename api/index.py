@@ -85,7 +85,7 @@ def get_queue():
         return jsonify({"success":False,"error": "missing clinic_id"}),400
     
 
-    try:
+    try:     
         client = get_client()
         worksheet = db.get_or_create_clinic_worksheet(client,clinic_id)
         patients = db.fetch_active_queue(worksheet)
@@ -93,10 +93,28 @@ def get_queue():
     except Exception as e:
         print("[API] queue fetching error",e)
         return jsonify({"success": False,"error": "couldnt load queue"}),500
-    
+           
 
     return jsonify({"success": True,"patients":patients})
+         
+   
+@app.route("/api/notifications",methods = ["GET"])   
+def get_notifications():       
+    clinic_id = (request.args.get("clinic_id") or "").strip().upper()
+    if not clinic_id : 
+        return jsonify({"success": False, "error": "missing clinic_id"}), 400
+    try:
+        client = get_client()
+        logs = db.get_recent_notifications(client,clinic_id)
 
+    except Exception as e:
+        print("[api] notifications fetch error",e)
+        traceback.print_exc()
+        return jsonify({"success":False,"error":"coudlnt load notifications "}),500
+
+    return jsonify({"success":True,"logs":logs})
+   
+        
 @app.route("/api/settings",methods=["GET"])
 def get_settings():
     clinic_id = (request.args.get("clinic_id") or "").strip().upper()
@@ -152,7 +170,9 @@ def add_patient():
         client = get_client()
         worksheet = db.get_or_create_clinic_worksheet(client,clinic_id)
         new_patient = db.add_patient(worksheet,name,phone,scheduled_date,scheduled_time,is_walk_in)
-                        
+        booking_msg = db.build_booking_message(clinic_id,name,scheduled_time,is_walk_in)
+        db.log_notification (client,clinic_id,name,phone,booking_msg,"booking_confirmation")
+
     except Exception as e:
         print("[API add patient error",e)
         traceback.print_exc()
@@ -162,7 +182,7 @@ def add_patient():
 
 
 @app.route("/api/patients/status",methods=["POST"])
-def udpate_status():
+def update_status():
     #handles call to room/mark completed/skip patient all through here
     #since its just changing status field 
     data = request.get_json(force=True)
@@ -192,14 +212,14 @@ def udpate_status():
             )
             if already_in_consult:
                 return jsonify({"success": False, "error": "doctor is already with another patient"}), 409
-
+   
         extra_fields = {}    
         if new_status == "In Consult":
             extra_fields["Consult_Start_Time"] = data.get("consult_start_time","")
 
 
         db.update_patient_status(worksheet,patient,new_status,extra_fields)
-
+        db.check_queue_notifications(client, clinic_id, worksheet)
     except ValueError as e:     
         #invalid status  from our own VALID_STATUSES check
          return jsonify({"success": False, "error": str(e)}), 400
