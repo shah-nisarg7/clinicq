@@ -138,13 +138,53 @@
   .doc-banner .right-side { display: flex; align-items: center; gap: 8px; }
   .doc-banner input[type="number"] { width: 70px; margin-top: 0; display: inline-block; }
   .doc-banner button { margin-top: 0; font-size: 13px; padding: 6px 10px; }
+
+  /* notif log panel, just to show what msgs wouldve gone out. not actually
+     sending anything rn*/ 
+  .notif-panel {
+    background: #fff;
+    border: 1px solid #d8dee4;
+    border-radius: 6px;
+    margin-top: 20px;
+    overflow: hidden;
+  }
+  .notif-panel-header {
+    background: #f5f7f9;
+    padding: 9px 12px;
+    font-weight: bold;
+    font-size: 13px;
+    color: #55606b;
+    border-bottom: 1px solid #d8dee4;
+  }
+  .notif-row {
+    border-bottom: 1px solid #eee;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .notif-row:last-child { border-bottom: none; }
+  .notif-row .notif-top {
+    display: flex;
+    justify-content: space-between;
+    color: #6b7785;
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+  .notif-tag {
+    background: #eef1f4;
+    border: 1px solid #d8dee4;
+    color: #55606b;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .notif-msg { color: #2b2b2b; }
 </style>    
 </head>
 <body>        
 
 <div id="auth-screen" class="box">       
   <h2 id="auth-title">Clinic Login</h2>
-  <div class="login-subtitle">queue management, no signup spam i promise</div>
+  <div class="login-subtitle">Queue Management System</div>
 
   <div id="login-form">
     <label>Clinic ID</label>
@@ -235,6 +275,14 @@
       <div id="col-consult"></div>
     </div>
   </div>     
+       
+  <!-- shows what whatsapp msgs wouldve been sent...
+       NOT actually wired up to send real msgs rn, just logging what the
+       text wouldve been-->
+  <div class="notif-panel">
+    <div class="notif-panel-header">Notification Log (simulated, not actually sent)</div>
+    <div id="notif-list"></div>
+  </div>
 </div>     
 
 <script>
@@ -350,6 +398,7 @@ function showDash() {
   
   loadQueue();
   loadDocStatus();
+  loadNotifLog();
 }    
 
 // get patients list from backend                   
@@ -408,7 +457,49 @@ function drawDocBanner(settings) {
   document.getElementById("delay-input").value = settings.delay_minutes;
 }
 
-// flips arrived <-> not arrived, whatever it currently isnt
+// pulls the recent simulated msg log for this clinic and draws it
+async function loadNotifLog() {
+  try {
+    let response = await fetch("/api/notifications?clinic_id=" + encodeURIComponent(currentClinic));
+    let parsed = await response.json();
+   
+    if (!parsed.success) {
+      console.error("notif log error...", parsed.error);
+      return;
+    }
+
+    drawNotifLog(parsed.logs);
+
+  } catch (e) {
+    console.error("failed to load notif log", e);
+  }
+}
+
+function drawNotifLog(logs) {
+  let list = document.getElementById("notif-list");
+  list.innerHTML = "";
+
+  if (logs.length === 0) {
+    list.innerHTML = '<div class="empty-msg">no messages logged yet</div>';
+    return;
+  }
+
+  logs.forEach(function (log) {
+    let row = document.createElement("div");
+    row.className = "notif-row";
+
+    row.innerHTML =
+      '<div class="notif-top">' +
+        '<span>' + log.Patient_Name + " &middot; " + log.Phone + '</span>' +
+        '<span><span class="notif-tag">' + log.Trigger + '</span> ' + log.Timestamp + '</span>' +
+      '</div>' +
+      '<div class="notif-msg">' + log.Message + '</div>';
+
+    list.appendChild(row);
+  });
+}
+
+
 async function toggleDocStatus() {
   let newStatus = docStatus === "Arrived" ? "Not Arrived" : "Arrived";
 
@@ -442,13 +533,13 @@ async function saveDelay() {
       body: JSON.stringify({ clinic_id: currentClinic, delay_minutes: mins })
     });
     let d = await r.json();
-
+    
     if (!d.success) {
       alert(d.error || "couldnt save delay");
       return;
     }
     loadDocStatus();
-
+   
   } catch (e) {
     alert("network issue...");
     console.error(e);
@@ -456,6 +547,7 @@ async function saveDelay() {
 }
 
 // sorting patients into columns. adding empty msg so UI doesnt look broken
+//basically if theres no patient leaving it blank would look weird
 function drawColumns(patients) {
   let schedCol = document.getElementById("col-scheduled");
   let waitCol = document.getElementById("col-waiting");
@@ -491,18 +583,18 @@ function drawColumns(patients) {
   if (stats.Scheduled === 0) schedCol.innerHTML = '<div class="empty-msg">nothing scheduled</div>';
   if (stats.Waiting === 0) waitCol.innerHTML = '<div class="empty-msg">lobby is empty</div>';
   if (stats["In Consult"] === 0) docRoom.innerHTML = '<div class="empty-msg">doc is free</div>';
-}
-
-
-function makeCard(pt, someoneInConsult) {
-  let c = document.createElement("div");
-  c.className = "patient-card";    
-
+}   
+           
+//had to use AI for this part..  
+function makeCard(pt, someoneInConsult) {                                           
+  let c = document.createElement("div");                                         
+  c.className = "patient-card";                             
+                            
   let isWalkin = pt.Is_Walk_In === "True" ? '<span class="walkin-tag">WALK-IN</span>' : "";
   let dispTime = pt.Status === "Scheduled" ? pt.Scheduled_Time : (pt.Consult_Start_Time || "--:--");
 
-  // conditional buttons based on status
-  let btns = "";
+  // conditional buttons based on status                  
+  let btns = "";   
   if (pt.Status === "Scheduled") {
     btns = '<button onclick="updatePtStatus(\'' + pt.ID + '\', \'Waiting\')">Check In</button>' +
            '<button class="danger" onclick="updatePtStatus(\'' + pt.ID + '\', \'Skipped\')">No-Show</button>';
@@ -546,11 +638,12 @@ async function updatePtStatus(pId, newStat) {
       return;
     }
     loadQueue();
+    loadNotifLog();
 
   } catch (e) {
     alert("network issue...");   
     console.error(e);
-  }
+  }   
 }     
 
 // calling to room needs timestamp so doing this separately
@@ -558,7 +651,7 @@ function sendToDoc(pId) {
   let n = new Date();
   let timeStr = n.getHours().toString().padStart(2, "0") + ":" + n.getMinutes().toString().padStart(2, "0");
   
-  updatePtStatusTime(pId, "In Consult", timeStr);
+  updatePtStatusTime(pId, "In Consult", timeStr);      
 }
 
 async function updatePtStatusTime(pId, newStat, startTime) {
@@ -582,6 +675,7 @@ async function updatePtStatusTime(pId, newStat, startTime) {
     }
     
     loadQueue();
+    loadNotifLog();
      
   } catch (e) {
     alert("network error...");
@@ -599,51 +693,50 @@ async function addPatient(walkInFlag) {
       
   if (!pName || !pPhone) {
     err.innerText = "need name and phone at least";
-    return;      
-  }      
-
+    return;             
+  }                
+        
   // walk ins r already here so skip time check
   if (!walkInFlag && !pTime) {
     err.innerText = "add a time or click add walk-in";
-    return;
-  }
+    return;                 
+  }         
 
   // always today for now
   let dDate = new Date().toISOString().split("T")[0];
 
-  try {         
+  try {                
     let r = await fetch("/api/patients", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({           
+      body:JSON.stringify({
         clinic_id: currentClinic,
         name: pName,
         phone: pPhone,
         scheduled_date: dDate,
-        scheduled_time: pTime,              
+        scheduled_time: pTime,
         is_walk_in: walkInFlag      
       })
     });
-         
-    let result = await r.json();
-
-          
+               
+    let result = await r.json();          
      if (!result.success) {
       err.innerText = result.error || "failed to save to db";
-      return;  
+      return;
     }
 
     // clearing inputs 
-    document.getElementById("new-name").value = "";
+    document.getElementById("new-name").value = "";         
      document.getElementById("new-phone").value = "";
     document.getElementById("new-time").value = "";
     loadQueue();
-    
+    loadNotifLog();
+             
   } catch (e) {
     err.innerText = "network failed, try again";
     console.error(e);                                                
-  }
+  }    
 }                 
 </script>
-</body>
-  </html>
+</body>    
+  </html>       
