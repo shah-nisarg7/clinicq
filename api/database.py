@@ -1,6 +1,7 @@
 import gspread
 import os
 from datetime import datetime 
+import hashlib 
 SERVICE_ACCOUNT_FILE = os.environ.get("GSHEET_SERVICE_ACCOUNT_JSON", "service_account.json") #getting google cloud service account details
 SPREADSHEET_NAME = os.environ.get("GSHEET_SPREADSHEET_NAME", "Clinic_Queue_MVP")#locating the google sheet (shared to that service account)
 
@@ -140,6 +141,15 @@ def update_patient_status(
 
     print(f"[DB] PATIENT ID = {patient['ID']} status -> {new_status}")
 
+
+
+def hash_password(password:str)-> str:
+    #simple hash
+    #adding this bcs rn passwords are saved raw in public google sheet (if ever leaked it could cause problem..)
+    return hashlib.sha256(password.encode()).hexdigest()
+
+
+
 #new login/register logic to create new spreadsheet, also added a test login with name CLINIC_001 
 def _get_auth_sheet(spreadsheet):
     # shared by login + register so neither one crashes on a brand new spreadsheet
@@ -148,7 +158,7 @@ def _get_auth_sheet(spreadsheet):
     except gspread.exceptions.WorksheetNotFound:
         auth_sheet = spreadsheet.add_worksheet("System_Auth", rows="100", cols="2")
         auth_sheet.append_row(["Clinic_ID", "Password"])
-        auth_sheet.append_row(["CLINIC_001", "admin123"])
+        auth_sheet.append_row(["CLINIC_001", hash_password("admin123")])
         print("[DB] Created System_Auth tab with default credentials.")
         return auth_sheet, True
 
@@ -231,7 +241,7 @@ def log_notification(client,clinic_id,patient_name,phone,message,trigger):
       
     
 def get_recent_notifications(client,clinic_id,limit = 20):    
-    spreadsheet = client.open(SPREADSHEET_NAME)       
+    spreadsheet = client.open(SPREADSHEET_NAME)               
     sheet = _get_notification_log_sheet(spreadsheet)
     records = sheet.get_all_records()
     clinic_logs = [r for r in records if str(r.get("Clinic_ID","")).strip().upper()== clinic_id]
@@ -258,7 +268,7 @@ def check_queue_notifications(client, clinic_id, worksheet):
     #after any status change, see if anyone crossed the 5-ahead or 3-ahead
     #mark and log what wouldve been sent to them. reuses Notification_Status
     #so we dont log the same threshold twice for the same patient
-    patients = fetch_active_queue(worksheet)
+    patients = fetch_active_queue(worksheet)   
     waiting = [p for p in patients if p["Status"] == "Waiting"]
 
     for idx, p in enumerate(waiting):                      
@@ -274,13 +284,13 @@ def check_queue_notifications(client, clinic_id, worksheet):
             msg = build_queue_update_message(clinic_id, p["Patient_Name"], people_ahead)
             log_notification(client, clinic_id, p["Patient_Name"], p["Phone"], msg, "5_people_ahead")
             _set_notification_flag(worksheet, p, "5_ahead_sent")
-
-
+            
+            
 def _set_notification_flag(worksheet, patient, value):
     row_idx = patient["_row_index"]
     header_to_col = {h: i + 1 for i, h in enumerate(HEADER_ROW)}
     worksheet.update_cell(row_idx, header_to_col["Notification_Status"], value)            
-
+  
 def authenticate_clinic(client, clinic_id: str, password: str) -> bool:
     spreadsheet = client.open(SPREADSHEET_NAME)
     auth_sheet, just_created = _get_auth_sheet(spreadsheet)
@@ -288,23 +298,23 @@ def authenticate_clinic(client, clinic_id: str, password: str) -> bool:
     if just_created:
         return clinic_id == "CLINIC_001" and password == "admin123"
 
+    hashed_input = hash_password(password)
     records = auth_sheet.get_all_records()
     for row in records:
         if str(row.get("Clinic_ID", "")).strip().upper() == clinic_id:
-            if str(row.get("Password", "")).strip() == password:
+            if str(row.get("Password", "")).strip() == hashed_input:
                 return True
     return False
-  
-
-
-
+       
+     
 def register_new_clinic(client, clinic_id: str, password: str):
-    spreadsheet = client.open(SPREADSHEET_NAME)
+    spreadsheet = client.open(SPREADSHEET_NAME)    
     auth_sheet, _ = _get_auth_sheet(spreadsheet)
 
-    # Check if clinic ID already exists
+    # Check if clinic ID already exists             
     records = auth_sheet.get_all_records()
     if any(str(row.get("Clinic_ID", "")).strip().upper() == clinic_id for row in records):
-        raise ValueError("Clinic ID already exists.")
+        raise ValueError("Clinic ID already exists.")            
 
-    auth_sheet.append_row([clinic_id, password])    
+    auth_sheet.append_row([clinic_id, hash_password(password)]) 
+
