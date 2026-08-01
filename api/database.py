@@ -34,7 +34,8 @@ HEADER_ROW = [
 ]    
     
 VALID_STATUSES = {"Scheduled", "Waiting", "In Consult", "Completed", "Skipped"}
-                  
+VALID_DOCTOR_STATUSES = {"Arrived","Not Arrived"}
+    
 
  
 def get_gspread_client():
@@ -185,33 +186,41 @@ def get_clinic_settings(client,clinic_id:str)-> dict:
             }
     
     #no row for a clinic yet, so creating one with defaults
-    sheet.append_row([clinic_id,"Not Arrived","0"])
+    sheet.append_row([clinic_id,"Not Arrived","0"])   
     return { "doctor_status": "Not Arrived", "delay_minutes" : 0}
-
+   
                  
 def update_clinic_settings (client,clinic_id:str,doctor_status:str = None, delay_minutes = None):
+    if doctor_status is not None and doctor_status not in VALID_DOCTOR_STATUSES:
+        raise ValueError(f"Invalid doctor_status '{doctor_status}'. Must be one of {VALID_DOCTOR_STATUSES}")
+
+    if delay_minutes is not None:
+        try:
+            delay_minutes = int(delay_minutes)
+        except (ValueError, TypeError):
+            raise ValueError("delay_minutes must be a number")
+        if delay_minutes < 0:
+            raise ValueError("delay_minutes cant be negative")
+
     spreadsheet = client.open(SPREADSHEET_NAME)
     sheet = _get_settings_sheet(spreadsheet)
     records = sheet.get_all_records()
-     
-    row_idx = None     
+
+    row_idx = None    
     for i, row in enumerate(records,start = 2): #starting w 2 bcs first row is headers
         if str(row.get("Clinic_ID","")).strip().upper() == clinic_id:
             row_idx = i
-            break 
-
+            break        
+    
     if row_idx is None:
-        #clinic has no settings row rn, making one with defaults 
-        #go back and update it below
         sheet.append_row([clinic_id,"Not Arrived","0"])
         row_idx = len(records) + 2
 
-      
-    if doctor_status is not None:            
+    if doctor_status is not None:
         sheet.update_cell(row_idx,2,doctor_status)
-        
+
     if delay_minutes is not None:
-        sheet.update_cell(row_idx,3,str(delay_minutes))      
+        sheet.update_cell(row_idx,3,str(delay_minutes))
     
                 
 def find_patient_by_id(worksheet,patient_id:str):         
@@ -285,22 +294,22 @@ def check_queue_notifications(client, clinic_id, worksheet):
             log_notification(client, clinic_id, p["Patient_Name"], p["Phone"], msg, "5_people_ahead")
             _set_notification_flag(worksheet, p, "5_ahead_sent")
             
-            
+             
 def _set_notification_flag(worksheet, patient, value):
-    row_idx = patient["_row_index"]
+    row_idx = patient["_row_index"]   
     header_to_col = {h: i + 1 for i, h in enumerate(HEADER_ROW)}
-    worksheet.update_cell(row_idx, header_to_col["Notification_Status"], value)            
-  
+    worksheet.update_cell(row_idx, header_to_col["Notification_Status"], value)                
+      
 def authenticate_clinic(client, clinic_id: str, password: str) -> bool:
     spreadsheet = client.open(SPREADSHEET_NAME)
     auth_sheet, just_created = _get_auth_sheet(spreadsheet)
-
-    if just_created:
+               
+    if just_created:    
         return clinic_id == "CLINIC_001" and password == "admin123"
 
     hashed_input = hash_password(password)
     records = auth_sheet.get_all_records()
-    for row in records:
+    for row in records:    
         if str(row.get("Clinic_ID", "")).strip().upper() == clinic_id:
             if str(row.get("Password", "")).strip() == hashed_input:
                 return True

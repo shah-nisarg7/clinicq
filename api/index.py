@@ -17,9 +17,8 @@ def get_client():
     global _client
     if _client is None:
         _client = db.get_gspread_client()
-              
-    return _client                
-              
+
+    return _client                          
 
 @app.route("/api/login",methods=["POST"]) 
 def login():
@@ -145,6 +144,9 @@ def update_settings():
     try:
         client = get_client()
         db.update_clinic_settings(client, clinic_id, doctor_status, delay_minutes)
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+
     except Exception as e:
         print("[API] settings update error", e)
         traceback.print_exc()
