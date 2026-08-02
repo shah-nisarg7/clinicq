@@ -34,6 +34,16 @@ HEADER_ROW = [
 ]    
     
 VALID_STATUSES = {"Scheduled", "Waiting", "In Consult", "Completed", "Skipped"}
+ #which status change acc makes sense in a real clinic (not really imp here its only if someone calls api directly..)
+ #but still adding it (bcs atleast im testing thru calling api directly in powershell)
+VALID_TRANSITIONS = {
+    "Scheduled" : {"Waiting":"Skipped"},
+    "Waiting": {"In Consult","Skipped"},
+    "In Consult": {"Completed"},
+    "Completed":set(),#after this evenn in terminal it wont let u switch directly from scheduled to completed etc
+    "Skipped":set(),
+}
+
 VALID_DOCTOR_STATUSES = {"Arrived","Not Arrived"}
         
 def is_valid_phone(phone:str)-> bool:
@@ -108,9 +118,9 @@ def add_patient(
         raise ValueError(f"{phone} doesnt look like a valid phone no.")
     new_id = get_next_patient_id(worksheet)
     
-    new_patient_row=[
-        str(new_id),
-        name,
+    new_patient_row=[   
+        str(new_id),            
+        name,     
         phone,
         scheduled_date,    
         scheduled_time,
@@ -137,6 +147,11 @@ def update_patient_status(
     if new_status not in VALID_STATUSES:
         raise ValueError(f"Invalid status '{new_status}' . Must be one of {VALID_STATUSES}")
 
+    current_status = patient["Status"]
+    allowed_next = VALID_TRANSITIONS.get(current_status, set())
+
+    if new_status not in allowed_next:
+        raise ValueError(f"Cant go from '{current_status}' to '{new_status}', thats not a real transition")
 
     row_idx = patient["_row_index"]
 
@@ -149,7 +164,6 @@ def update_patient_status(
                 worksheet.update_cell(row_idx,header_to_col[field],str(value))
 
     print(f"[DB] PATIENT ID = {patient['ID']} status -> {new_status}")
-
 
 
 def hash_password(password:str)-> str:
