@@ -28,17 +28,22 @@ HEADER_ROW = [
     "Scheduled_Time", 
     "Status", 
     "Consult_Start_Time", 
-    "Last_ETA", 
-    "Is_Walk_In",   
+    "Last_ETA",   
+    "Is_Walk_In",      
     "Notification_Status"
 ]    
     
 VALID_STATUSES = {"Scheduled", "Waiting", "In Consult", "Completed", "Skipped"}
 VALID_DOCTOR_STATUSES = {"Arrived","Not Arrived"}
-    
-
+        
+def is_valid_phone(phone:str)-> bool:
+    #not adding strict rules bcs there are various formats of numbers
+    #with + , brackets, spaces etc       
+    #mostly digits is a resasonable check...
+    digits_only = "".join(c for c in phone if c.isdigit())
+    return len(digits_only) >= 7 and len(digits_only) <= 15    
  
-def get_gspread_client():
+def get_gspread_client():  
                      
     return gspread.service_account(filename=SERVICE_ACCOUNT_FILE)
 
@@ -98,6 +103,9 @@ def add_patient(
     is_walk_in: bool = False
 ) -> dict:
 
+
+    if not is_valid_phone(phone):
+        raise ValueError(f"{phone} doesnt look like a valid phone no.")
     new_id = get_next_patient_id(worksheet)
     
     new_patient_row=[

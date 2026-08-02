@@ -137,7 +137,7 @@ def update_settings():
     clinic_id = (data.get("clinic_id") or "").strip().upper()
     doctor_status = data.get("doctor_status")
     delay_minutes = data.get("delay_minutes")
-
+   
     if not clinic_id:
         return jsonify({"success": False, "error": "missing clinic_id"}), 400              
 
@@ -166,22 +166,23 @@ def add_patient():
 
     if not clinic_id or not name or not phone:
         return jsonify({"success": False, "error": "missing name, phone, or clinic id"}),400
-    
-
-    try:
+             
+    try:   
         client = get_client()
         worksheet = db.get_or_create_clinic_worksheet(client,clinic_id)
         new_patient = db.add_patient(worksheet,name,phone,scheduled_date,scheduled_time,is_walk_in)
-        booking_msg = db.build_booking_message(clinic_id,name,scheduled_time,is_walk_in)
-        db.log_notification (client,clinic_id,name,phone,booking_msg,"booking_confirmation")
 
+        booking_msg = db.build_booking_message(clinic_id, name, scheduled_time, is_walk_in)
+        db.log_notification(client, clinic_id, name, phone, booking_msg, "booking_confirmation")
+            
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
         print("[API add patient error",e)
-        traceback.print_exc()
+        traceback.print_exc()      
         return jsonify({"success":False,"error": "couldnt add patient"}),500
-    
-    return jsonify({"success": True, "patient": new_patient})
 
+    return jsonify({"success": True, "patient": new_patient})
 
 @app.route("/api/patients/status",methods=["POST"])
 def update_status():
@@ -196,7 +197,7 @@ def update_status():
         return jsonify({"success": False, "error": "missing clinic id , patient id or new status"}),400
     
 
-    try:
+    try:    
         client = get_client()
         worksheet = db.get_or_create_clinic_worksheet(client,clinic_id)
         patient = db.find_patient_by_id(worksheet,patient_id)
