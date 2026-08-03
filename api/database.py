@@ -2,6 +2,7 @@ import gspread
 import os
 from datetime import datetime 
 import hashlib 
+import json
 SERVICE_ACCOUNT_FILE = os.environ.get("GSHEET_SERVICE_ACCOUNT_JSON", "service_account.json") #getting google cloud service account details
 SPREADSHEET_NAME = os.environ.get("GSHEET_SPREADSHEET_NAME", "Clinic_Queue_MVP")#locating the google sheet (shared to that service account)
 
@@ -53,10 +54,17 @@ def is_valid_phone(phone:str)-> bool:
     digits_only = "".join(c for c in phone if c.isdigit())
     return len(digits_only) >= 7 and len(digits_only) <= 15    
  
-def get_gspread_client():  
-                     
-    return gspread.service_account(filename=SERVICE_ACCOUNT_FILE)
+def get_gspread_client():
+    #on vercel theres no actual file , so the whole service account
+    #json gets pasted into an env var .. locally we just use the file
+    #like before since thats easier for  me while building...
+    service_account_env = os.environ.get("GSHEET_SERVICE_ACCOUNT_JSON_CONTENT")
+           
+    if service_account_env:
+        creds_dict = json.loads(service_account_env)
+        return gspread.service_account_from_dict(creds_dict)
 
+    return gspread.service_account(filename=SERVICE_ACCOUNT_FILE)
 def get_or_create_clinic_worksheet(client, clinic_id):
     try:
         ws = client.open("Clinic_Queue_MVP").worksheet(clinic_id)      
@@ -144,7 +152,7 @@ def update_patient_status(
         new_status: str,
         extra_fields: dict = None
 ):
-    if new_status not in VALID_STATUSES:
+    if new_status not in VALID_STATUSES:    
         raise ValueError(f"Invalid status '{new_status}' . Must be one of {VALID_STATUSES}")
 
     current_status = patient["Status"]
@@ -153,8 +161,8 @@ def update_patient_status(
     if new_status not in allowed_next:
         raise ValueError(f"Cant go from '{current_status}' to '{new_status}', thats not a real transition")
 
-    row_idx = patient["_row_index"]
-
+    row_idx  = patient["_row_index"]
+    
     worksheet.update_cell(row_idx,COL_STATUS +1,new_status)
 
     if extra_fields:
@@ -165,9 +173,9 @@ def update_patient_status(
 
     print(f"[DB] PATIENT ID = {patient['ID']} status -> {new_status}")
 
-
+         
 def hash_password(password:str)-> str:
-    #simple hash
+    #simple hash    
     #adding this bcs rn passwords are saved raw in public google sheet (if ever leaked it could cause problem..)
     return hashlib.sha256(password.encode()).hexdigest()
 
