@@ -15,7 +15,23 @@
        padding: 20px;              
   }    
   
-    h1 { margin: 0 0 4px 0; font-size: 22px; color: #1a2b3c; }
+h1 { margin: 0; font-size: 21px; color: #1a2b3c; letter-spacing: -0.3px; }
+.logo-wrap { display: flex; align-items: center; gap: 10px; }
+.logo-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: #1f6b6f;    
+  position: relative;
+  flex-shrink: 0;
+}
+.logo-dot::after {
+  content: "";
+  position: absolute;
+  top: -4px; left: -4px; right: -4px; bottom: -4px;
+  border: 1.5px solid #1f6b6f;
+  border-radius: 50%;
+  opacity: 0.35;
+}
   .subtitle { color: #6b7785; font-size: 13px; margin-bottom: 20px; }
 
   .box {background: #fff;                                     
@@ -38,7 +54,7 @@
     font-size: 14px;}             
   input:focus { outline: none; border-color: #3a6ea5; }
   button {
-    background: #2c5f9e;
+    background: #1f6b6f;
     color: #fff;
      border: none;     
     padding: 8px 16px;
@@ -46,60 +62,60 @@
     cursor: pointer;   
     font-size: 14px;
      margin-top: 14px;
-  }
-  button:hover {background: #234b7d;}
+  }      
+  button:hover {background: #164e51;}
   button:disabled { background: #ccc; cursor: not-allowed; }
-  
+         
   /* secondary btn styles */
   button.secondary { background: #6b7785; }
   button.secondary:hover {background: #55606b;}
   
   button.danger {background: #b84040; }
-  button.danger:hover {background: #963333;}
+  button.danger:hover {background: #963333;}               
 
   .error-msg {color: #b84040; font-size: 13px; margin-top: 8px;}
-  .toggle-link { font-size: 13px; color: #2c5f9e; cursor: pointer; margin-top: 10px; display: inline-block;}
+  .toggle-link { font-size: 13px; color: #1f6b6f; cursor: pointer; margin-top: 10px; display: inline-block;}
   .toggle-link:hover { text-decoration: underline; }
 
-  #dashboard {display: none;}
+  #dashboard {display: none;}     
   
-  .top-bar {
-    display: flex;
-     justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #d8dee4;
-       padding-bottom: 12px;
+  .top-bar {           
+    display: flex;        
+     justify-content: space-between;       
+    align-items: center;          
+    border-bottom: 1px solid #d8dee4;                  
+       padding-bottom: 12px;     
     margin-bottom: 20px;
-  }   
-
+  }                       
+     
   .add-patient-form {    
-    background: #fff;
+    background: #fff;    
     border: 1px solid #d8dee4;
-    border-radius: 6px;
-    padding: 16px;
-     margin-bottom: 20px;}
+    border-radius: 6px;         
+    padding: 16px;       
+    margin-bottom: 20px;}
   .add-patient-form .row { display: flex; gap: 10px; flex-wrap: wrap;}
-  .add-patient-form .row > div {flex: 1; min-width: 140px;}
+  .add-patient-form .row > div {flex: 1; min-width: 140px;}    
          
   .columns {
     display: flex;  
-     gap: 16px;
+     gap: 16px;  
     flex-wrap: wrap;  }    
   .column {
     flex: 1;
     min-width: 260px;
-      background: #fff;
+      background: #fff;       
     border: 1px solid #d8dee4;
-    border-radius: 6px;
+    border-radius: 6px;   
     overflow: hidden;
   }
   .column-header {
     background: #f5f7f9;
-    padding: 9px 12px;
-    font-weight: bold;
+    padding: 9px 12px;    
+    font-weight: bold;   
      font-size: 13px;
-    color: #55606b;
-    border-bottom: 1px solid #d8dee4;}
+    color: #55606b;       
+    border-bottom: 1px solid #d8dee4;}     
          
   .patient-card {
     border-bottom: 1px solid #eee;
@@ -159,37 +175,40 @@
   .notif-row {
     border-bottom: 1px solid #eee;
     padding: 10px 12px;
-    font-size: 13px;
+    font-size: 13px;  
   }
   .notif-row:last-child { border-bottom: none; }
   .notif-row .notif-top {
-    display: flex;
+    display: flex;    
     justify-content: space-between;
-    color: #6b7785;
+    color: #6b7785;     
     font-size: 11px;
     margin-bottom: 3px;
-  }
+  }                        
   .notif-tag {
     background: #eef1f4;
     border: 1px solid #d8dee4;
-    color: #55606b;
+    color: #55606b;   
     font-size: 10px;
     padding: 1px 6px;
     border-radius: 3px;
-  }
-  .notif-msg { color: #2b2b2b; }
-</style>    
+  }   
+  .notif-msg { color: #2b2b2b; }     
+</style>         
 </head>
-<body>        
-
+<body>
+       
 <div id="auth-screen" class="box">       
-  <h2 id="auth-title">Clinic Login</h2>
+  <div class="logo-wrap" style="margin-bottom:14px;">  
+  <div class="logo-dot"></div>
+  <h2 id="auth-title" style="margin:0;">Clinic Login</h2>
+</div>
   <div class="login-subtitle">Queue Management System</div>
-
+      
   <div id="login-form">
     <label>Clinic ID</label>
     <input type="text" id="login-clinic-id" placeholder="e.g. CLINIC_001">
-    
+        
     <label>Password</label>
     <input type="password" id="login-password">
     
@@ -201,12 +220,12 @@
   <div id="register-form" style="display:none;">
     <label>Choose a Clinic ID</label>
     <input type="text" id="reg-clinic-id" placeholder="e.g. MY_CLINIC">
-    
+                            
     <label>Choose a Password</label>     
     <input type="password" id="reg-password">
-    
+        
     <label>Invite Code</label>
-    <input type="text" id="reg-invite-code" placeholder="admin invite code">
+    <input type="text" id="reg-invite-code" placeholder="admin invite code">      
     
     <button onclick="doRegister()">Register</button>
     <div id="register-error" class="error-msg"></div>
@@ -216,10 +235,13 @@
                
 <div id="dashboard">
   <div class="top-bar">
-    <div>
-      <h1>ClinicQ</h1>
-      <div class="subtitle" id="clinic-label"></div>
-    </div>
+    <div class="logo-wrap">
+  <div class="logo-dot"></div>
+  <div>
+    <h1>ClinicQ</h1>
+    <div class="subtitle" id="clinic-label"></div>
+  </div>
+</div>
     <div>
       <button class="secondary" onclick="loadQueue()">Refresh</button>
       <button class="secondary" onclick="logout()">Log Out</button>
@@ -240,13 +262,13 @@
   <div class="add-patient-form">
     <div class="row">
       <div>
-        <label>Patient Name</label>
+        <label>Patient Name</label>    
         <input type="text" id="new-name">
       </div>
       <div>
         <label>Phone</label>
         <input type="text" id="new-phone" placeholder="with country code">
-      </div>
+      </div>   
       <div>
         <label>Scheduled Time</label>
         <input type="time" id="new-time">
@@ -270,13 +292,13 @@
       <div id="col-waiting"></div>
     </div>
     
-    <div class="column">
+    <div class="column">      
       <div class="column-header">With Doctor</div>
       <div id="col-consult"></div>
     </div>
   </div>     
        
-  <!-- shows what whatsapp msgs wouldve been sent...
+  <!-- shows what whatsapp msgs wouldve been sent...    
        NOT actually wired up to send real msgs rn, just logging what the
        text wouldve been-->
   <div class="notif-panel">
@@ -296,7 +318,7 @@ let docStatus = "Not Arrived";
 
 window.onload = function () {
   if (currentClinic) {
-    showDash();
+    showDash();  
   }
 };
 
@@ -305,7 +327,7 @@ function showRegister() {
   document.getElementById("register-form").style.display = "block";
   document.getElementById("auth-title").innerText = "Register Clinic";
 }
-
+     
 function showLogin() {
   document.getElementById("register-form").style.display = "none";
   document.getElementById("login-form").style.display = "block";
@@ -317,12 +339,12 @@ async function doLogin() {
   let c_id = document.getElementById("login-clinic-id").value.trim();
   let pwd = document.getElementById("login-password").value;
   let err = document.getElementById("login-error");
-  err.innerText = "";
+  err.innerText = "";      
 
   if (!c_id || !pwd) {
-    err.innerText = "enter clinic id and password please";
+    err.innerText = "enter clinic id and password please";   
     return;
-  }
+  }    
 
   try {
     let res = await fetch("/api/login", {
@@ -363,7 +385,7 @@ async function doRegister() {
   }
       
   try {
-    let res = await fetch("/api/register", {
+    let res = await fetch("/api/register", {             
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ clinic_id: c_id, password: pwd, invite_code: inv })
@@ -373,19 +395,19 @@ async function doRegister() {
     if (!result.success) {
       err.innerText = result.error || "registration failed";
       return;    
-    }
-
+    }         
+                  
     showLogin();
     document.getElementById("login-clinic-id").value = c_id; // auto fill it 
-
+            
   } catch (e) {
     err.innerText = "server error, check console";
     console.error(e);
   }
 }
-
+    
 function logout() {               
-  currentClinic = null;           
+  currentClinic = null;                
   localStorage.removeItem("clinicq_clinic_id");                                     
   document.getElementById("dashboard").style.display = "none";
   document.getElementById("auth-screen").style.display = "block";
@@ -396,7 +418,7 @@ function showDash() {
   document.getElementById("dashboard").style.display = "block";
   document.getElementById("clinic-label").innerText = "Logged in as " + currentClinic;                    
   
-  loadQueue();
+  loadQueue();       
   loadDocStatus();
   loadNotifLog();
 }    
@@ -513,7 +535,7 @@ async function toggleDocStatus() {
 
     if (!d.success) {
       alert(d.error || "couldnt update doctor status");
-      return;
+      return;    
     }
     loadDocStatus();
 
@@ -585,7 +607,7 @@ function drawColumns(patients) {
   if (stats["In Consult"] === 0) docRoom.innerHTML = '<div class="empty-msg">doc is free</div>';
 }   
            
-//had to use AI for this part..  
+//had to use AI for this part..  :/
 function makeCard(pt, someoneInConsult) {                                           
   let c = document.createElement("div");                                         
   c.className = "patient-card";                             
@@ -637,40 +659,40 @@ async function updatePtStatus(pId, newStat) {
       alert(d.error || "error updating status");
       return;
     }
-    loadQueue();
-    loadNotifLog();
+    loadQueue();       
+    loadNotifLog();    
 
   } catch (e) {
     alert("network issue...");   
     console.error(e);
   }   
 }     
-
+       
 // calling to room needs timestamp so doing this separately
-function sendToDoc(pId) {      
+function sendToDoc(pId) {         
   let n = new Date();
   let timeStr = n.getHours().toString().padStart(2, "0") + ":" + n.getMinutes().toString().padStart(2, "0");
   
   updatePtStatusTime(pId, "In Consult", timeStr);      
 }
-
+ 
 async function updatePtStatusTime(pId, newStat, startTime) {
   try {
-    let r = await fetch("/api/patients/status", {
+    let r = await fetch("/api/patients/status",  {   
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         clinic_id: currentClinic,
-        patient_id: pId,
+         patient_id: pId,
         new_status: newStat,    
-        consult_start_time: startTime   
-      })
-    });
+        consult_start_time: startTime        
+      })              
+    });                   
     
     let d = await r.json();
-
+     
     if (!d.success) {
-      alert(d.error || "cant update patient");
+      alert(d.error || "cant update patient");       
       return;     
     }
     
@@ -711,32 +733,32 @@ async function addPatient(walkInFlag) {
       headers: { "Content-Type": "application/json" },
       body:JSON.stringify({
         clinic_id: currentClinic,
-        name: pName,
-        phone: pPhone,
-        scheduled_date: dDate,
+        name: pName,         
+         phone: pPhone,
+        scheduled_date: dDate,      
         scheduled_time: pTime,
         is_walk_in: walkInFlag      
-      })
-    });
-               
-    let result = await r.json();          
+      })      
+    });  
+                    
+    let result = await r.json();                
      if (!result.success) {
       err.innerText = result.error || "failed to save to db";
       return;
-    }
-
-    // clearing inputs 
+    }                  
+                     
+    // clearing inputs    
     document.getElementById("new-name").value = "";         
      document.getElementById("new-phone").value = "";
     document.getElementById("new-time").value = "";
-    loadQueue();
-    loadNotifLog();
+    loadQueue();         
+    loadNotifLog();     
              
-  } catch (e) {
+  } catch (e) {       
     err.innerText = "network failed, try again";
     console.error(e);                                                
-  }    
-}                 
-</script>
-</body>    
-  </html>       
+  }
+}                       
+</script>                
+  </html>
+
