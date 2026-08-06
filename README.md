@@ -4,22 +4,21 @@ built for a hack club project. It's a simple, zero cost queue management system 
 
 Backend: google sheets api acting as a serverless database. it automatically creates a new sheet tab whenever a new clinic registers. The entire database is stored in a google spreadsheet, accessed by a service account of google cloud console.
 
-whatsapp notifications: patients get a message when their appointment is booked, and again when they're a few people away from being seen. currently switching from green api to ultramsg since the free tier fits this project's usage better. (still in progress, not wired up yet)
+whatsapp notifications: Couldnt implement real whatsapp API firing messages.. as it requires an established business (under government/ linking GST etc etc)after using multiple wayaround APIs i decided that  for this demo project ill keep  a log panel on the dashboard instead (just simulating what would be sent to patient and on what triggers)
+# queue logic
+Once the doctor starts the queue, each expected patient gets a live ETA calculated from how many people are ahead of them (in consult + waiting + still expected) times an average consult time, plus any doctor delay (before doctor arrives) the front desk enters manually which gets added to each patient's ETA
 
-# migrating off streamlit
-streamlit isn't allowed for this program, so im rebuilding whole thing as a static frontend + vercel python serverless functions (flask). the google sheets logic in database.py is mostly unchanged from the streamlit version, just moved into api/ and wrapped with proper api routes instead of being wired directly into streamlit...
+# How to run 
+ Direct link : https://clinicq-three.vercel.app/
+To register for a new account the secret code/admin code is set to "HACKCLUB_2026" (this was added in earlier version to prevent spamming whatsapp api through normal people testing it/using a bot..)
 
 
-frontend is still the old placeholder, not built yet...
-
-# testing / for reviewers
-if you are reviewing this code and want to test the database logic, you can create a test clinic account. you'll need an admin invite code to make an account.
-
-**a note on security:** in a real production environment, this code is securely managed via an environment variable to prevent random web scrapers from spamming the database. for this review, the fallback code is `HACKCLUB_2026` so you can easily bypass it and test the dynamic google sheets auth layer.
-
-# how to run locally
-1. clone the repo
-2. install dependencies: `pip install -r requirements.txt`
-3. you need your own google cloud service account key. save it as `service_account.json` in the root folder.
-4. set up a `.env` file with your ultramsg instance id + token
-5. run with `vercel dev`
+Running it locally would require cloning the repo then  a Google cloud service account (free) and generate service_account.json (from IAM and admin tab).
+install dependencies by : pip install -r requirements.txt
+set up .env file with ultramsg instance ID + token (still kept the code for API but currently no messages will be fired)
+run it with vercel dev in terminal.
+  
+# Important points
+Google sheets has limitations of approx 200 sheets, meaning 200 -3 (management tabs) ~ 197 clinics can register after which
+google sheets cant handle it.
+There is no rate limit currently, adding it would be a big task for login, register and adding a patient. 
