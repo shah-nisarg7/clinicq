@@ -294,7 +294,7 @@ today_patients = [p for p in patients if p.get("Scheduled_Date") == today_str]
 active   = [p for p in today_patients if p["Status"] not in ("Completed", "Skipped")]
 waiting  = [p for p in active if p["Status"] == "Waiting"]
 in_con   = [p for p in active if p["Status"] == "In Consult"]
-done     = [p for p in today_patients if p["Status"] == "Completed"]
+done     = [p for p in today_patients if p["Status"] == "Completed"]      
 
 
 
@@ -306,7 +306,7 @@ with col_q1:
             st.session_state.queue_active = True
             st.rerun()
     else:
-        st.success("Queue is Live!")
+        st.success("Queue is Live!")  
 
 with col_q2:
     if st.session_state.queue_active:
@@ -318,8 +318,8 @@ st.markdown("<br>",unsafe_allow_html = True)
 st.markdown(f"## LIVE QUEUE:  {st.session_state.clinic_id}")
 
 if st.session_state.status_message:
-    msg = st.session_state.status_message
-    mtyp = st.session_state.status_type
+    msg = st.session_state.status_message       
+    mtyp = st.session_state.status_type          
 
     if mtyp == "success": 
         st.markdown(f"<div style='color:#33ff00; padding-bottom: 10px;'>&gt; SUCCESS: {msg}</div>", unsafe_allow_html=True)   
@@ -353,12 +353,12 @@ with k_col1:
         st.caption("No patients expected.")
     else:  
         for index, p in enumerate(expected):                 
-            with st.container():
+            with st.container():    
                 #logic for dynamic ETA
                 # People ahead = (ppl currently in consult) + (ppl in lobby) + (ppl ahead of them in this expected list)
                 people_ahead = len(in_con) + len(waiting) + index
                 
-                if st.session_state.queue_active:
+                if st.session_state.queue_active: 
                     from datetime import timedelta                     
                     avg_consult_time = 15 # Assumes 15 mins per patient (in later iteration we can give this option in clinci dashboard)
                     total_wait_mins = (people_ahead * avg_consult_time) + st.session_state.queue_delay_mins
@@ -366,9 +366,9 @@ with k_col1:
                     eta_time = (datetime.now() + timedelta(minutes=total_wait_mins)).strftime("%H:%M")
                     eta_display = f"ETA: {eta_time} ({people_ahead} ahead)"     
                 else:
-                    eta_display = f"Scheduled: {p['Scheduled_Time']}"  
+                    eta_display = f"Scheduled: {p['Scheduled_Time']}"        
 
-                if people_ahead ==3 and p.get("Notification_Status")=="Pending":
+                if people_ahead <=3 and p.get("Notification_Status")=="Pending":
                    leave_msg = (   
                         f"🏥 *ClinicQ Update:*\n"
                         f"Hi {p['Patient_Name'].strip()}, you are up soon!\n\n"
@@ -404,15 +404,15 @@ with k_col1:
                             st.rerun()
                         except Exception as e:
                             flash(f"Error: {e}", "error")    
-
-with k_col2:  
+        
+with k_col2:        
     st.markdown('<div class="kanban-col-header">🛋️ Waiting Lobby</div>', unsafe_allow_html=True)
     lobby = sorted([p for p in today_patients if p["Status"] == "Waiting"], key=lambda p: int(p["ID"]))
     
     if not lobby:
         st.caption("Lobby is empty.")
     else:
-        for p in lobby:     
+        for p in lobby:           
             st.markdown(
                 f'<div class="patient-card"><strong>#{p["ID"]} — {p["Patient_Name"]}</strong><br>'
                 f'<span style="color:#888; font-size:12px;">⏰ {p["Scheduled_Time"]} | 📞 {p["Phone"]}</span></div>', 
@@ -420,30 +420,27 @@ with k_col2:
             )
             if st.button("CALL TO ROOM ➔", key=f"call_{p['ID']}", use_container_width=True):
                 db.update_patient_status(st.session_state.worksheet, p, "In Consult", {"Consult_Start_Time": datetime.now().strftime("%H:%M")})
-                flash(f"{p['Patient_Name']} called to room.", "success")
-                st.rerun()
 
                 ready_msg = (
                     f"🏥 *ClinicQ Update:*\n"
                     f"It is your turn, {p['Patient_Name'].strip()}!\n\n"
                     f"The doctor is ready for you. Please walk into the consultation room now."
                 )
-                wa_status = send_whatsapp_message(p['Phone'].strip(),ready_msg)
-                
+                wa_status = send_whatsapp_message(p['Phone'].strip(), ready_msg)
+
                 if wa_status == 'success':
                     flash(f"{p['Patient_Name']} called to room and notified via WhatsApp.", "success")
-        
                 else:
                     flash(f"{p['Patient_Name']} called to room (WhatsApp free-tier limit reached).", "warning")
 
-                st.rerun()                    
+                st.rerun()                              
 
 with k_col3:   
     st.markdown('<div class="kanban-col-header">🩺 In Consult</div>', unsafe_allow_html=True)
     consulting = sorted([p for p in today_patients if p["Status"] == "In Consult"], key=lambda p: int(p["ID"]))
     
     if not consulting:
-        st.caption("No active consultations.")         
+        st.caption("No active consultations.")               
     else:      
         for p in consulting:   
             st.markdown(
@@ -454,6 +451,11 @@ with k_col3:
             if st.button("MARK COMPLETE ✔", key=f"complete_{p['ID']}", use_container_width=True):
                 db.update_patient_status(st.session_state.worksheet, p, "Completed")
                 flash(f"{p['Patient_Name']} consultation completed.", "success")
-                st.rerun()
+                st.rerun()          
 
+       
 
+if st.button("MARK COMPLETE ", key = f'complete_{p['ID']}',use_container_width=True):
+    db.update_patient_status(st.session_state.worksheet,p,"Completed")
+    flash(f'{p['Patient_Name']} consultation completed.',"success")              
+    st.rerun()                          

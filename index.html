@@ -5,25 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ClinicQ</title>
 <style>
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; }      
     
   body {
     font-family: Arial, Helvetica, sans-serif;
-    background: #eef1f4;
+    background: #eef1f4;     
      color: #2b2b2b;            
     margin: 0;
        padding: 20px;              
   }    
-  
+     
 h1 { margin: 0; font-size: 21px; color: #1a2b3c; letter-spacing: -0.3px; }
 .logo-wrap { display: flex; align-items: center; gap: 10px; }
 .logo-dot {
   width: 28px; height: 28px;
-  border-radius: 50%;
+  border-radius: 50%;    
   background: #1f6b6f;    
   position: relative;
   flex-shrink: 0;
-}
+}      
 .logo-dot::after {
   content: "";
   position: absolute;
@@ -76,32 +76,32 @@ h1 { margin: 0; font-size: 21px; color: #1a2b3c; letter-spacing: -0.3px; }
   .error-msg {color: #b84040; font-size: 13px; margin-top: 8px;}
   .toggle-link { font-size: 13px; color: #1f6b6f; cursor: pointer; margin-top: 10px; display: inline-block;}
   .toggle-link:hover { text-decoration: underline; }
-
+/* hidden by default, showDash() flips this on after login is done*/  
   #dashboard {display: none;}     
   
-  .top-bar {           
+  .top-bar {                       
     display: flex;        
      justify-content: space-between;       
     align-items: center;          
     border-bottom: 1px solid #d8dee4;                  
        padding-bottom: 12px;     
-    margin-bottom: 20px;
-  }                       
-     
-  .add-patient-form {    
-    background: #fff;    
+    margin-bottom: 20px;            
+  }                                 
+
+  .add-patient-form {      
+    background: #fff;           
     border: 1px solid #d8dee4;
-    border-radius: 6px;         
-    padding: 16px;       
+    border-radius: 6px;              
+    padding: 16px;            
     margin-bottom: 20px;}
   .add-patient-form .row { display: flex; gap: 10px; flex-wrap: wrap;}
   .add-patient-form .row > div {flex: 1; min-width: 140px;}    
          
   .columns {
-    display: flex;  
-     gap: 16px;  
+    display: flex;        
+     gap: 16px;      
     flex-wrap: wrap;  }    
-  .column {
+  .column {       
     flex: 1;
     min-width: 260px;
       background: #fff;       
@@ -191,20 +191,20 @@ h1 { margin: 0; font-size: 21px; color: #1a2b3c; letter-spacing: -0.3px; }
     color: #55606b;   
     font-size: 10px;
     padding: 1px 6px;
-    border-radius: 3px;
+    border-radius: 3px;     
   }   
   .notif-msg { color: #2b2b2b; }     
 </style>         
 </head>
-<body>
-       
+<body>      
+             
 <div id="auth-screen" class="box">       
-  <div class="logo-wrap" style="margin-bottom:14px;">  
+  <div class="logo-wrap" style="margin-bottom:14px;">
   <div class="logo-dot"></div>
-  <h2 id="auth-title" style="margin:0;">Clinic Login</h2>
+  <h2 id="auth-title" style="margin:0;">Clinic Login</h2>              
 </div>
-  <div class="login-subtitle">Queue Management System</div>
-      
+  <div class="login-subtitle">Queue Management System</div>     
+               
   <div id="login-form">
     <label>Clinic ID</label>
     <input type="text" id="login-clinic-id" placeholder="e.g. CLINIC_001">
@@ -240,29 +240,29 @@ h1 { margin: 0; font-size: 21px; color: #1a2b3c; letter-spacing: -0.3px; }
   <div>
     <h1>ClinicQ</h1>
     <div class="subtitle" id="clinic-label"></div>
-  </div>
-</div>
+  </div>          
+</div>        
     <div>
       <button class="secondary" onclick="loadQueue()">Refresh</button>
-      <button class="secondary" onclick="logout()">Log Out</button>
-    </div>
+      <button class="secondary" onclick="logout()">Log Out</button>     
+    </div>    
   </div>
 
   <!-- doctor status banner, drawDocBanner() fills this in -->
-  <div id="doc-banner" class="doc-banner not-here">
+  <div id="doc-banner" class="doc-banner not-here">    
     <div id="doc-status-text">checking doctor status...</div>
     <div class="right-side">
       <input type="number" id="delay-input" placeholder="delay mins" min="0">
-      <button onclick="saveDelay()">Set Delay</button>
+      <button onclick="saveDelay()">Set Delay</button>        
       <button onclick="toggleDocStatus()" id="doc-toggle-btn">Mark Doctor Arrived</button>
     </div>
-  </div>
+  </div>      
 
   <!-- patient intake form -->
   <div class="add-patient-form">
     <div class="row">
       <div>
-        <label>Patient Name</label>    
+        <label>Patient Name</label>             
         <input type="text" id="new-name">
       </div>
       <div>
@@ -305,27 +305,28 @@ h1 { margin: 0; font-size: 21px; color: #1a2b3c; letter-spacing: -0.3px; }
     <div class="notif-panel-header">Notification Log (simulated, not actually sent)</div>
     <div id="notif-list"></div>
   </div>
-</div>     
-
-<script>
+</div>          
+               
+<script>       
 // dumping clinic id in localstorage so we dont lose it on refresh lol
-// NOT storing pw anywhere cause security 
-let currentClinic = localStorage.getItem("clinicq_clinic_id");
+// NOT storing pw anywhere cause security     
+let currentClinic = localStorage.getItem("clinicq_clinic_id");    
 
-// tracking doctor status locally so the card buttons know whether to
-// let u click "call to room" or not
-let docStatus = "Not Arrived";
-
+// tracking doctor status locally so the card buttons know whether to   
+// let u click "call to room" or not              
+let docStatus = "Not Arrived";           
+               
 window.onload = function () {
+  //if we got a clinic id saved, skipping loging and going straight to dashboard 
   if (currentClinic) {
-    showDash();  
+    showDash();     
   }
 };
-
-function showRegister() {
+//just swapping which form is visible of the two 
+function showRegister() {        
   document.getElementById("login-form").style.display = "none";
   document.getElementById("register-form").style.display = "block";
-  document.getElementById("auth-title").innerText = "Register Clinic";
+  document.getElementById("auth-title").innerText = "Register Clinic";    
 }
      
 function showLogin() {
@@ -379,10 +380,10 @@ async function doRegister() {
   let err = document.getElementById("register-error");
   err.innerText = "";
 
-  if (!c_id || !pwd || !inv) {
+  if (!c_id || !pwd || !inv) {         
     err.innerText = "fill in all fields...";
     return;
-  }
+  }       
       
   try {
     let res = await fetch("/api/register", {             
@@ -390,7 +391,7 @@ async function doRegister() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ clinic_id: c_id, password: pwd, invite_code: inv })
     });
-    let result = await res.json();
+    let result = await res.json();   
      
     if (!result.success) {
       err.innerText = result.error || "registration failed";
@@ -406,7 +407,8 @@ async function doRegister() {
   }
 }
     
-function logout() {               
+function logout() {     
+  //clear everything and dumping  back to login screen           
   currentClinic = null;                
   localStorage.removeItem("clinicq_clinic_id");                                     
   document.getElementById("dashboard").style.display = "none";
@@ -414,6 +416,7 @@ function logout() {
 }
 
 function showDash() {
+  //3 sepearte loads so one failining doesnt block the others 
   document.getElementById("auth-screen").style.display = "none";
   document.getElementById("dashboard").style.display = "block";
   document.getElementById("clinic-label").innerText = "Logged in as " + currentClinic;                    
@@ -536,13 +539,13 @@ async function toggleDocStatus() {
     if (!d.success) {
       alert(d.error || "couldnt update doctor status");
       return;    
-    }
-    loadDocStatus();
+    }      
+    loadDocStatus();   
 
-  } catch (e) {
+  } catch (e) {  
     alert("network issue...");
     console.error(e);
-  }
+  }            
 }
 
 async function saveDelay() {
@@ -559,7 +562,7 @@ async function saveDelay() {
     if (!d.success) {
       alert(d.error || "couldnt save delay");
       return;
-    }
+    }  
     loadDocStatus();
    
   } catch (e) {
@@ -567,7 +570,7 @@ async function saveDelay() {
     console.error(e);
   }
 }
-
+     
 // sorting patients into columns. adding empty msg so UI doesnt look broken
 //basically if theres no patient leaving it blank would look weird
 function drawColumns(patients) {
@@ -576,7 +579,7 @@ function drawColumns(patients) {
   let docRoom = document.getElementById("col-consult");
 
   schedCol.innerHTML = "";
-  waitCol.innerHTML = "";
+  waitCol.innerHTML = "";   
   docRoom.innerHTML = "";
 
   // counting to check if empty later
@@ -646,6 +649,8 @@ function makeCard(pt, someoneInConsult) {
 }      
 
 // updates status in db  
+//generic status setter (used for checkin skip/ done)
+//sendToDoc has its own version 
 async function updatePtStatus(pId, newStat) {    
   try {
     let r = await fetch("/api/patients/status", {
@@ -657,7 +662,7 @@ async function updatePtStatus(pId, newStat) {
 
     if (!d.success) {
       alert(d.error || "error updating status");
-      return;
+      return;       
     }
     loadQueue();       
     loadNotifLog();    
@@ -673,9 +678,9 @@ function sendToDoc(pId) {
   let n = new Date();
   let timeStr = n.getHours().toString().padStart(2, "0") + ":" + n.getMinutes().toString().padStart(2, "0");
   
-  updatePtStatusTime(pId, "In Consult", timeStr);      
+  updatePtStatusTime(pId, "In Consult", timeStr);          
 }
- 
+//same thing as updatePTStatus but also passes start time of consulting 
 async function updatePtStatusTime(pId, newStat, startTime) {
   try {
     let r = await fetch("/api/patients/status",  {   
@@ -685,15 +690,15 @@ async function updatePtStatusTime(pId, newStat, startTime) {
         clinic_id: currentClinic,
          patient_id: pId,
         new_status: newStat,    
-        consult_start_time: startTime        
-      })              
+        consult_start_time: startTime           
+      })                       
     });                   
-    
+         
     let d = await r.json();
      
     if (!d.success) {
       alert(d.error || "cant update patient");       
-      return;     
+      return;            
     }
     
     loadQueue();
@@ -761,4 +766,3 @@ async function addPatient(walkInFlag) {
 }                       
 </script>                
   </html>
-

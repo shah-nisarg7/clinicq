@@ -9,7 +9,7 @@ import traceback
 
 app = Flask(__name__)   
 
-_client = None
+_client = None    
 
 def get_client():
     #cache the gspread client so we're not re authenticating with google on
@@ -55,6 +55,8 @@ def register():
     invite_code = (data.get("invite_code") or "").strip()
 
     #same fallback code mentioned in readme for reviewers..
+    #well now its not really useful (as already its in github's readme and there is no actuall whatsapp api linked firing msgs)
+    #but it can still prevent some spam of account creation if someone doesnt read readme to get the "HACKCLUB_2026" code 
     admin_invite_code = os.environ.get("ADMIN_INVITE_CODE","HACKCLUB_2026")
     if invite_code != admin_invite_code:
         return jsonify({"success": False, "error": "invalid invite code"}), 403
@@ -66,7 +68,7 @@ def register():
         client = get_client()
         db.register_new_clinic(client,clinic_id,password)     
        
-    except ValueError as e:
+    except ValueError as e:    
         # clinic id already taken    
         return jsonify({"success":False,"error":str(e)}),409
     
@@ -105,7 +107,7 @@ def get_notifications():
     try:
         client = get_client()
         logs = db.get_recent_notifications(client,clinic_id)
-
+            
     except Exception as e:
         print("[api] notifications fetch error",e)
         traceback.print_exc()
@@ -174,8 +176,8 @@ def add_patient():
 
         booking_msg = db.build_booking_message(clinic_id, name, scheduled_time, is_walk_in)
         db.log_notification(client, clinic_id, name, phone, booking_msg, "booking_confirmation")
-            
-    except ValueError as e:
+             
+    except ValueError as e: 
         return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
         print("[API add patient error",e)
@@ -189,46 +191,43 @@ def update_status():
     #handles call to room/mark completed/skip patient all through here
     #since its just changing status field 
     data = request.get_json(force=True)
-    clinic_id = (data.get("clinic_id") or "").strip().upper()
+    clinic_id = (data.get("clinic_id") or "").strip().upper()               
     patient_id = data.get("patient_id")
     new_status = (data.get("new_status") or "").strip()
 
     if not clinic_id or not patient_id or not new_status:
         return jsonify({"success": False, "error": "missing clinic id , patient id or new status"}),400
-    
-
+              
     try:    
-        client = get_client()
+        client = get_client()         
         worksheet = db.get_or_create_clinic_worksheet(client,clinic_id)
         patient = db.find_patient_by_id(worksheet,patient_id)
 
-        if patient is None:
+        if patient is None:     
            return jsonify({"success": False, "error": "patient not found"}), 404
 
         # doctor can only see one patient at a time, so blocking this if
-        # someone else is alr in consult 
+        # someone else is alr in consult
         if new_status == "In Consult":
             active_patients = db.fetch_active_queue(worksheet)
             already_in_consult = any(
                 p["ID"] != str(patient["ID"]) and p["Status"] == "In Consult"
                 for p in active_patients
-            )
+            )      
             if already_in_consult:
                 return jsonify({"success": False, "error": "doctor is already with another patient"}), 409
    
-        extra_fields = {}    
+        extra_fields = {}         
         if new_status == "In Consult":
             extra_fields["Consult_Start_Time"] = data.get("consult_start_time","")
-
-
         db.update_patient_status(worksheet,patient,new_status,extra_fields)
         db.check_queue_notifications(client, clinic_id, worksheet)
-    except ValueError as e:     
+    except ValueError as e:          
         #invalid status  from our own VALID_STATUSES check
          return jsonify({"success": False, "error": str(e)}), 400
     
     except Exception as e:
-        print('[API] update status error',e)
+        print('[API] update status error',e)      
         traceback.print_exc()
         return jsonify({"success":False,"error":"couldnt update patient "}),500
     

@@ -11,7 +11,7 @@ GSPREAD_SCOPES = [
     "https://www.googleapis.com/auth/drive",
 ]
     
-
+#column indexes 
 COL_ID              = 0   
 COL_NAME            = 1   
 COL_PHONE           = 2   
@@ -46,14 +46,14 @@ VALID_TRANSITIONS = {
 }
 
 VALID_DOCTOR_STATUSES = {"Arrived","Not Arrived"}
-        
+               
 def is_valid_phone(phone:str)-> bool:
     #not adding strict rules bcs there are various formats of numbers
     #with + , brackets, spaces etc       
     #mostly digits is a resasonable check...
     digits_only = "".join(c for c in phone if c.isdigit())
     return len(digits_only) >= 7 and len(digits_only) <= 15    
- 
+        
 def get_gspread_client():
     #on vercel theres no actual file , so the whole service account
     #json gets pasted into an env var .. locally we just use the file
@@ -62,11 +62,13 @@ def get_gspread_client():
            
     if service_account_env:
         creds_dict = json.loads(service_account_env)
-        return gspread.service_account_from_dict(creds_dict)
+        return gspread.service_account_from_dict(creds_dict)      
 
     return gspread.service_account(filename=SERVICE_ACCOUNT_FILE)
-def get_or_create_clinic_worksheet(client, clinic_id):
-    try:
+def get_or_create_clinic_worksheet(client, clinic_id):     
+    # each clinic gets its own worksheet tab ,named after their clinic id 
+
+    try:          
         ws = client.open("Clinic_Queue_MVP").worksheet(clinic_id)      
         return ws   
     except gspread.exceptions.WorksheetNotFound:
@@ -75,23 +77,22 @@ def get_or_create_clinic_worksheet(client, clinic_id):
         ws.append_row(headers)
         return ws
 
-
+     
 def fetch_all_patients(worksheet) -> list[dict]:
     #reads all the new patient rows and returns them as dicts, skips the header row (bcs its not to be counted)
     all_rows = worksheet.get_all_values()
-
-    if not all_rows or len(all_rows) < 2:           
-        return []  
-
-    patients = []
+                 
+    if not all_rows or len(all_rows) < 2:               
+        return [] 
+    patients = [] 
     for sheet_row_idx, row in enumerate(all_rows[1:], start=2):  
-        while len(row) < len(HEADER_ROW):
-            row.append("")
+        while len(row) < len(HEADER_ROW):         
+            row.append("")       
 
-        patient = {field: row[i] for i, field in enumerate(HEADER_ROW)}
-        patient["_row_index"] = sheet_row_idx  
-
-        if patient["ID"]:
+        patient = {field: row[i] for i, field in enumerate(HEADER_ROW)}     
+        patient["_row_index"] = sheet_row_idx 
+                
+        if patient["ID"]:    
             patients.append(patient)
 
     return patients            
@@ -102,19 +103,19 @@ def fetch_active_queue(worksheet) -> list[dict]:
     active = [p for p in all_p if p["Status"] not in ("Completed",)]
     active.sort(key=lambda p: int(p["ID"]))
     return active
-
+    
 
 def get_next_patient_id(worksheet) -> int:
     #to determine the auto incrementing token (ID) assigned to everypatient row                    
-
+    #just doing max + 1 instead len+1 so gaps from deleted rows dont cause dupes
     all_p = fetch_all_patients(worksheet)
     if not all_p:
         return 1
     return max(int(p["ID"]) for p in all_p) + 1
-
+     
 def add_patient(
     worksheet,
-    name: str,
+    name: str,      
     phone: str,
     scheduled_date: str,
     scheduled_time: str,
@@ -145,24 +146,24 @@ def add_patient(
     new_patient = {field: new_patient_row[i] for i, field in enumerate(HEADER_ROW)}
     return new_patient
 
-
+#changing patient status based on their current state (like in consult , waiting etc...)
 def update_patient_status(
         worksheet,
         patient: dict,
-        new_status: str,
+        new_status: str,    
         extra_fields: dict = None
-):
+):          
     if new_status not in VALID_STATUSES:    
-        raise ValueError(f"Invalid status '{new_status}' . Must be one of {VALID_STATUSES}")
-
-    current_status = patient["Status"]
+        raise ValueError(f"Invalid status '{new_status}' . Must be one of {VALID_STATUSES}")    
+        
+    current_status = patient["Status"]       
     allowed_next = VALID_TRANSITIONS.get(current_status, set())
-
+    #ig this can only happen if someone changes the google sheet directly (or some glitch ig) but just added it for prevention
     if new_status not in allowed_next:
         raise ValueError(f"Cant go from '{current_status}' to '{new_status}', thats not a real transition")
-
+     
     row_idx  = patient["_row_index"]
-    
+    #only touching the status cell here, extra_fields (below) handles the rest 
     worksheet.update_cell(row_idx,COL_STATUS +1,new_status)
 
     if extra_fields:
@@ -192,6 +193,8 @@ def _get_auth_sheet(spreadsheet):
         auth_sheet.append_row(["CLINIC_001", hash_password("admin123")])
         print("[DB] Created System_Auth tab with default credentials.")
         return auth_sheet, True
+    #returning just_created so authentication knows to check 
+    #against the hardcoded default set instead of the sheet (which is emptyy)
 
 def _get_settings_sheet(spreadsheet):
     #seperate tab that tracks doctor status + delay per clinic , same idea as system_auth (passwords and all) 
@@ -206,7 +209,7 @@ def _get_settings_sheet(spreadsheet):
 def get_clinic_settings(client,clinic_id:str)-> dict:
     spreadsheet = client.open(SPREADSHEET_NAME)
     sheet = _get_settings_sheet(spreadsheet)
-    records = sheet.get_all_records()
+    records = sheet.get_all_records()        
 
     for row in records:
         if str(row.get("Clinic_ID", "")).strip().upper() == clinic_id:
@@ -227,21 +230,21 @@ def update_clinic_settings (client,clinic_id:str,doctor_status:str = None, delay
     if delay_minutes is not None:
         try:
             delay_minutes = int(delay_minutes)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError):    
             raise ValueError("delay_minutes must be a number")
-        if delay_minutes < 0:
+        if delay_minutes < 0:    
             raise ValueError("delay_minutes cant be negative")
 
     spreadsheet = client.open(SPREADSHEET_NAME)
     sheet = _get_settings_sheet(spreadsheet)
     records = sheet.get_all_records()
 
-    row_idx = None    
+    row_idx = None
     for i, row in enumerate(records,start = 2): #starting w 2 bcs first row is headers
         if str(row.get("Clinic_ID","")).strip().upper() == clinic_id:
             row_idx = i
             break        
-    
+         
     if row_idx is None:
         sheet.append_row([clinic_id,"Not Arrived","0"])
         row_idx = len(records) + 2
@@ -270,18 +273,18 @@ def _get_notification_log_sheet(spreadsheet):
         sheet = spreadsheet.add_worksheet("Notification_Log",rows = "1000",cols = "6")
         sheet.append_row(["Clinic_ID", "Patient_Name", "Phone","Message", "Trigger", "Timestamp"])
         return sheet     
-
+     
 
 def log_notification(client,clinic_id,patient_name,phone,message,trigger):
     spreadsheet = client.open(SPREADSHEET_NAME)
-    sheet = _get_notification_log_sheet(spreadsheet)
+    sheet = _get_notification_log_sheet(spreadsheet)   
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     sheet.append_row([clinic_id, patient_name, phone, message, trigger, timestamp], value_input_option="USER_ENTERED")
       
-    
-def get_recent_notifications(client,clinic_id,limit = 20):    
+
+def get_recent_notifications(client,clinic_id,limit = 20):
     spreadsheet = client.open(SPREADSHEET_NAME)               
-    sheet = _get_notification_log_sheet(spreadsheet)
+    sheet = _get_notification_log_sheet(spreadsheet)    
     records = sheet.get_all_records()
     clinic_logs = [r for r in records if str(r.get("Clinic_ID","")).strip().upper()== clinic_id]
     clinic_logs.reverse() #puttingi the neweset one first
@@ -308,6 +311,7 @@ def check_queue_notifications(client, clinic_id, worksheet):
     #mark and log what wouldve been sent to them. reuses Notification_Status
     #so we dont log the same threshold twice for the same patient
     patients = fetch_active_queue(worksheet)   
+    #indx here doubles as people_head since waiting list is already in queue order 
     waiting = [p for p in patients if p["Status"] == "Waiting"]
 
     for idx, p in enumerate(waiting):                      
@@ -326,25 +330,24 @@ def check_queue_notifications(client, clinic_id, worksheet):
             
              
 def _set_notification_flag(worksheet, patient, value):
-    row_idx = patient["_row_index"]   
+    row_idx = patient["_row_index"]
     header_to_col = {h: i + 1 for i, h in enumerate(HEADER_ROW)}
     worksheet.update_cell(row_idx, header_to_col["Notification_Status"], value)                
       
 def authenticate_clinic(client, clinic_id: str, password: str) -> bool:
     spreadsheet = client.open(SPREADSHEET_NAME)
-    auth_sheet, just_created = _get_auth_sheet(spreadsheet)
-               
+    auth_sheet, just_created = _get_auth_sheet(spreadsheet)        
     if just_created:    
         return clinic_id == "CLINIC_001" and password == "admin123"
 
     hashed_input = hash_password(password)
-    records = auth_sheet.get_all_records()
+    records = auth_sheet.get_all_records()    
     for row in records:    
         if str(row.get("Clinic_ID", "")).strip().upper() == clinic_id:
             if str(row.get("Password", "")).strip() == hashed_input:
                 return True
     return False
-       
+              
      
 def register_new_clinic(client, clinic_id: str, password: str):
     spreadsheet = client.open(SPREADSHEET_NAME)    
