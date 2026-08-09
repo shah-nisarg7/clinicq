@@ -11,41 +11,39 @@
     font-family: Arial, Helvetica, sans-serif;
     background: #eef1f4;     
      color: #2b2b2b;            
-    margin: 0;
-       padding: 20px;              
+    margin: 0;      
+       padding: 20px;                    
   }    
      
 h1 { margin: 0; font-size: 21px; color: #1a2b3c; letter-spacing: -0.3px; }
 .logo-wrap { display: flex; align-items: center; gap: 10px; }
-.logo-dot {
-  width: 28px; height: 28px;
-  border-radius: 50%;    
-  background: #1f6b6f;    
-  position: relative;
+.logo-mark {
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  background: #1f6b6f;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  font-weight: 700;
   flex-shrink: 0;
-}      
-.logo-dot::after {
-  content: "";
-  position: absolute;
-  top: -4px; left: -4px; right: -4px; bottom: -4px;
-  border: 1.5px solid #1f6b6f;
-  border-radius: 50%;
-  opacity: 0.35;
-}
+}     
   .subtitle { color: #6b7785; font-size: 13px; margin-bottom: 20px; }
 
-  .box {background: #fff;                                     
-    border: 1px solid #d8dee4;      
+  .box {background: #fff;
+    border: 1px solid #d8dee4;       
      border-radius: 6px;        
-    padding: 20px;
+    padding: 20px;   
        max-width: 400px;
-    margin: 60px auto;
+    margin: 60px auto;       
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);}
   .box h2 {margin-top: 0; font-size: 19px; color: #1a2b3c;}
   .box .login-subtitle { color: #94a0ac; font-size: 12px; margin-top: -8px; margin-bottom: 16px;}
 
   label { display: block; margin-top: 10px; font-size: 13px; color: #55606b; }
-  input {     
+  input {         
     width: 100%;                   
      padding: 7px 8px;      
     border: 1px solid #c7cdd3;
@@ -200,14 +198,14 @@ h1 { margin: 0; font-size: 21px; color: #1a2b3c; letter-spacing: -0.3px; }
              
 <div id="auth-screen" class="box">       
   <div class="logo-wrap" style="margin-bottom:14px;">
-  <div class="logo-dot"></div>
+  <div class="logo-mark">Q</div>
   <h2 id="auth-title" style="margin:0;">Clinic Login</h2>              
 </div>
   <div class="login-subtitle">Queue Management System</div>     
                
   <div id="login-form">
     <label>Clinic ID</label>
-    <input type="text" id="login-clinic-id" placeholder="e.g. CLINIC_001">
+    <input type="text" id="login-clinic-id" placeholder="e.g. CLINIC_001">      
         
     <label>Password</label>
     <input type="password" id="login-password">
@@ -236,7 +234,7 @@ h1 { margin: 0; font-size: 21px; color: #1a2b3c; letter-spacing: -0.3px; }
 <div id="dashboard">
   <div class="top-bar">
     <div class="logo-wrap">
-  <div class="logo-dot"></div>
+  <div class="logo-mark">Q</div>
   <div>
     <h1>ClinicQ</h1>
     <div class="subtitle" id="clinic-label"></div>
