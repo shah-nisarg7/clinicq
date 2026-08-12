@@ -22,3 +22,21 @@ run it with vercel dev in terminal.
 Google sheets has limitations of approx 200 sheets, meaning 200 -3 (management tabs) ~ 197 clinics can register after which
 google sheets cant handle it.
 There is no rate limit currently, adding it would be a big task for login, register and adding a patient. 
+Project Images
+Login Page:
+<img width="506" height="393" alt="image" src="https://github.com/user-attachments/assets/0f4aa289-cba4-48c4-a9b6-eb2684dffe39" />
+Dashboard: 
+<img width="1912" height="698" alt="image" src="https://github.com/user-attachments/assets/9714c5b7-7525-43bd-bbf5-b0464f6fc9ad" />
+Notification panel : 
+<img width="1887" height="641" alt="image" src="https://github.com/user-attachments/assets/075ad1e5-05c6-4f25-b1c1-7ac6f7e353e5" />
+backend : 
+<img width="1480" height="559" alt="image" src="https://github.com/user-attachments/assets/69737f87-ba25-438f-933e-9d08da4af39a" />
+(database for all patient data, Clinic settings/data) 
+<img width="540" height="436" alt="image" src="https://github.com/user-attachments/assets/d2a60daf-1330-4676-b4fa-3609a4932333" />
+<img width="1357" height="643" alt="image" src="https://github.com/user-attachments/assets/1949ad06-04ef-4a76-9fa2-9ddc74609295" />
+
+
+
+
+
+
