@@ -13,10 +13,20 @@ Once the doctor starts the queue, each expected patient gets a live ETA calculat
 To register for a new account the secret code/admin code is set to "HACKCLUB_2026" (this was added in earlier version to prevent spamming whatsapp api through normal people testing it/using a bot..)
 
 
-Running it locally would require cloning the repo then  a Google cloud service account (free) and generate service_account.json (from IAM and admin tab).
-install dependencies by : pip install -r requirements.txt
-set up .env file with ultramsg instance ID + token (still kept the code for API but currently no messages will be fired)
-run it with vercel dev in terminal.
+
+# RUNNING LOCALLY 
+(its somewhat lengthhy)
+ 1) clone the repo 
+ 2) pip install -r requirements.txt
+ 3) Create a free Google Cloud project at console.cloud.google.com
+ 4) Enable the "Google Sheets" and "Google Drive" API for that project
+ 5) Create a service account (IAM and Admin Tab -> Service account -> create ) then generate a JSON Key for it and save it as "service_account.json" in the project root.
+ 6) Create a new Google Sheet named "Clinic_Queue_MVP" and share it (Editor access) with the service account's email 
+(looks like `xxx@xxx.iam.gserviceaccount.com`) found in the json key file
+7) run "vercel dev" , click on the link shown (or just open localhost:3000), login with "REVIEWER_CLINIC" and pass is already shared in the reviewer's note. 
+(or just register a new account using the "HACKCLUB_2026" code already mentioned above.
+everything is free under google's free tier.. 
+
   
 # Important points
 Google sheets has limitations of approx 200 sheets, meaning 200 -3 (management tabs) ~ 197 clinics can register after which
