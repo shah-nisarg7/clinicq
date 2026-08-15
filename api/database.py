@@ -140,7 +140,7 @@ def add_patient(
         "Pending"        # Notification status
     ]
          
-    worksheet.append_row(new_patient_row, value_input_option="USER_ENTERED")
+    worksheet.append_row(new_patient_row, value_input_option="RAW")
     print(f"[DB] Added patient {name} (ID ={new_id}) at slot {scheduled_time}")
     
     new_patient = {field: new_patient_row[i] for i, field in enumerate(HEADER_ROW)}
@@ -279,7 +279,7 @@ def log_notification(client,clinic_id,patient_name,phone,message,trigger):
     spreadsheet = client.open(SPREADSHEET_NAME)
     sheet = _get_notification_log_sheet(spreadsheet)   
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    sheet.append_row([clinic_id, patient_name, phone, message, trigger, timestamp], value_input_option="USER_ENTERED")
+    sheet.append_row([clinic_id, patient_name, phone, message, trigger, timestamp], value_input_option="RAW")
       
 
 def get_recent_notifications(client,clinic_id,limit = 20):
